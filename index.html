@@ -1579,18 +1579,57 @@ async function saveProduct(){
   const emoji=document.getElementById('pf-emoji').value.trim();
   const dest=document.getElementById('pf-destaque').checked;
   const eid=document.getElementById('edit-prod-id').value;
-  if(!nome||!cat||isNaN(preco)){showToast('Preencha nome, categoria e preço','err');return;}
-  const p={nome,categoria:cat,descricao:desc,preco,estoque,imagem_url:img,emoji,destaque:dest,ativo:true};
+  
+  if(!nome||!cat||isNaN(preco)){
+    showToast('Preencha nome, categoria e preço','err');
+    return;
+  }
+  
+  // Monta o objeto exatamente com as colunas que estão na tabela
+  const p={
+    nome,
+    categoria: cat,
+    descricao: desc,
+    preco: preco,
+    estoque: estoque,
+    imagem_url: img,
+    emoji: emoji,
+    destaque: dest,
+    ativo: true
+  };
+  
   if(supabase){
-    if(eid)await supabase.update('products',p,'id',eid);
-    else await supabase.insert('products',[p]);
-    await loadData();
+    try {
+      let res;
+      if(eid) {
+        res = await supabase.update('products', p, 'id', eid);
+      } else {
+        res = await supabase.insert('products', [p]);
+      }
+      
+      // LOG DE TESTE: Abre o console do navegador (F12) para ver o que o Supabase respondeu
+      console.log("Resposta do Supabase:", res);
+      
+      // Recarrega os dados direto do banco para atualizar a tela
+      await loadData();
+      
+    } catch (error) {
+      console.error("Erro ao salvar no Supabase:", error);
+      showToast('Erro ao salvar no banco de dados','err');
+      return;
+    }
   } else {
-    if(eid){const i=allProducts.findIndex(x=>x.id==eid);if(i>=0)allProducts[i]={...allProducts[i],...p};}
-    else allProducts.push({...p,id:Date.now()});
+    // Modo Demo/Local
+    if(eid){
+      const i=allProducts.findIndex(x=>x.id==eid);
+      if(i>=0) allProducts[i]={...allProducts[i],...p};
+    } else {
+      allProducts.push({...p,id: Date.now()});
+    }
     renderAllData();
   }
-  showToast(eid?'Produto atualizado!':'Produto cadastrado!','ok');
+  
+  showToast(eid?'Produto atualizado! ✓':'Produto cadastrado! ✓','ok');
   cancelProdEdit();
 }
 
