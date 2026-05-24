@@ -1052,23 +1052,65 @@ function loadLocalConfig() {
   } catch(e) { loadDemoData(); }
 }
 
-// ══════════════════════════════════════════════
-//  SUPABASE CLIENT
-// ══════════════════════════════════════════════
 function buildSB(url, key) {
-  const h = { 'apikey':key,'Authorization':`Bearer ${key}`,'Content-Type':'application/json' };
-  const q = (t,qstr) => fetch(`${url}/rest/v1/${t}${qstr||''}`,{headers:h});
+  const h = { 
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
+    'Content-Type': 'application/json' 
+  };
+  
+  const q = (t, qstr) => fetch(`${url}/rest/v1/${t}${qstr||''}`, { headers: h });
+  
   return {
-    url, key, headers:h,
+    url, key, headers: h,
     q,
-    getAll: (t,extra='') => q(t,`?select=*${extra}`).then(r=>r.json()),
-    insert: (t,d) => fetch(`${url}/rest/v1/${t}`,{method:'POST',headers:{...h,'Prefer':'return=representation'},body:JSON.stringify(Array.isArray(d)?d:[d])}).then(r=>r.json()),
-    update: (t,d,col,val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`,{method:'PATCH',headers:{...h,'Prefer':'return=representation'},body:JSON.stringify(d)}).then(r=>r.json()),
-    del: (t,col,val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`,{method:'DELETE',headers:h}).then(r=>r.ok),
-    upsert: (t,d) => fetch(`${url}/rest/v1/${t}`,{method:'POST',headers:{...h,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(Array.isArray(d)?d:[d])}).then(r=>r.json()),
+    // Garante que se vier um erro ou não for array, trate corretamente
+    getAll: (t, extra='') => q(t, `?select=*${extra}`).then(async r => {
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        console.error(`Erro ao buscar em ${t}:`, err);
+        return [];
+      }
+      return r.json();
+    }),
+    
+    // Adicionado tratamento para não quebrar com r.json() se o retorno for vazio
+    insert: (t, d) => fetch(`${url}/rest/v1/${t}`, {
+      method: 'POST',
+      headers: { ...h, 'Prefer': 'return=representation' },
+      body: JSON.stringify(Array.isArray(d) ? d : [d])
+    }).then(r => r.ok ? r.json().catch(() => ({ })) : r.json()),
+    
+    // Adicionado Prefer return=representation no PATCH também
+    update: (t, d, col, val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`, {
+      method: 'PATCH',
+      headers: { ...h, 'Prefer': 'return=representation' },
+      body: JSON.stringify(d)
+    }).then(r => r.ok ? r.json().catch(() => ({ })) : r.json()),
+    
+    del: (t, col, val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`, {
+      method: 'DELETE',
+      headers: h
+    }).then(r => r.ok),
+    
+    upsert: (t, d) => fetch(`${url}/rest/v1/${t}`, {
+      method: 'POST',
+      headers: { ...h, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify(Array.isArray(d) ? d : [d])
+    }).then(r => r.ok ? r.json().catch(() => ({ })) : r.json()),
+    
     // Auth
-    signUp: (email,pw,meta) => fetch(`${url}/auth/v1/signup`,{method:'POST',headers:h,body:JSON.stringify({email,password:pw,data:meta})}).then(r=>r.json()),
-    signIn: (email,pw) => fetch(`${url}/auth/v1/token?grant_type=password`,{method:'POST',headers:h,body:JSON.stringify({email,password:pw})}).then(r=>r.json()),
+    signUp: (email, pw, meta) => fetch(`${url}/auth/v1/signup`, { 
+      method: 'POST', 
+      headers: h, 
+      body: JSON.stringify({ email, password: pw, data: meta }) 
+    }).then(r => r.json()),
+    
+    signIn: (email, pw) => fetch(`${url}/auth/v1/token?grant_type=password`, { 
+      method: 'POST', 
+      headers: h, 
+      body: JSON.stringify({ email, password: pw }) 
+    }).then(r => r.json()),
   };
 }
 
