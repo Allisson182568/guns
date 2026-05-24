@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSC — Guns Score Community</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #E45A13;
+  --orange-dark: #B84810;
+  --orange-light: #FF6B1A;
+  --orange-glow: rgba(228,90,19,0.18);
+  --black: #0A0A0A;
+  --dark: #111111;
+  --dark2: #181818;
+  --dark3: #202020;
+  --dark4: #2A2A2A;
+  --gray: #444444;
+  --gray2: #666666;
+  --gray3: #999999;
+  --light: #E8E8E8;
+  --white: #F8F8F8;
+  --green: #22C55E;
+  --red: #EF4444;
+  --r: 6px;
+  --rl: 12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Rajdhani',sans-serif;background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--dark)}
+::-webkit-scrollbar-thumb{background:var(--orange);border-radius:3px}
+
+/* ══════════════════════════════════
+   AGE GATE
+══════════════════════════════════ */
+#age-gate{
+  position:fixed;inset:0;background:var(--black);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;padding:1.5rem;
+}
+.age-gate-box{
+  background:var(--dark2);border:1.5px solid var(--orange);border-radius:var(--rl);
+  padding:2.5rem 2rem;max-width:420px;width:100%;text-align:center;
+}
+.age-gate-logo{font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--orange);line-height:1;margin-bottom:0.25rem}
+.age-gate-box p{color:var(--gray3);font-size:15px;margin-bottom:2rem;line-height:1.5}
+.age-gate-box h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:0.5rem;color:var(--white)}
+.age-btns{display:flex;gap:12px}
+.btn-age-yes{flex:1;background:var(--orange);color:#fff;border:none;border-radius:var(--r);padding:13px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:background .15s;text-transform:uppercase;letter-spacing:1px}
+.btn-age-yes:hover{background:var(--orange-light)}
+.btn-age-no{flex:1;background:var(--dark4);color:var(--gray3);border:1.5px solid var(--gray);border-radius:var(--r);padding:13px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:600;cursor:pointer;transition:all .15s;text-transform:uppercase}
+.btn-age-no:hover{border-color:var(--red);color:var(--red)}
+
+/* ══════════════════════════════════
+   TOPBAR
+══════════════════════════════════ */
+.topbar{
+  background:var(--dark);border-bottom:1.5px solid var(--dark4);
+  padding:0 1.5rem;display:flex;align-items:center;
+  height:60px;position:sticky;top:0;z-index:100;gap:1rem;
+}
+.logo{
+  font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--orange);
+  letter-spacing:3px;white-space:nowrap;flex-shrink:0;
+}
+.logo span{color:var(--white);font-size:14px;font-family:'Rajdhani',sans-serif;
+  font-weight:500;letter-spacing:1px;display:block;line-height:1;margin-top:-4px}
+.nav-main{display:flex;gap:2px;flex:1;overflow-x:auto}
+.nav-main::-webkit-scrollbar{display:none}
+.nav-btn{
+  background:none;border:none;color:var(--gray3);
+  font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:var(--r);cursor:pointer;
+  transition:all .15s;text-transform:uppercase;letter-spacing:0.5px;
+  white-space:nowrap;
+}
+.nav-btn:hover{background:var(--dark3);color:var(--white)}
+.nav-btn.active{background:var(--orange);color:#fff}
+.nav-btn.locked{opacity:0.45;cursor:default}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.user-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--dark3);border:1.5px solid var(--dark4);
+  border-radius:999px;padding:5px 12px 5px 6px;cursor:pointer;
+  transition:border-color .15s;
+}
+.user-pill:hover{border-color:var(--orange)}
+.user-avatar{
+  width:28px;height:28px;border-radius:50%;background:var(--orange);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:13px;color:#fff;flex-shrink:0;
+}
+.user-name{font-size:13px;font-weight:600;color:var(--white);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-login{
+  background:var(--orange);color:#fff;border:none;border-radius:var(--r);
+  padding:8px 16px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:background .15s;text-transform:uppercase;letter-spacing:0.5px;
+}
+.btn-login:hover{background:var(--orange-light)}
+.btn-outline{
+  background:none;border:1.5px solid var(--dark4);color:var(--gray3);
+  border-radius:var(--r);padding:7px 14px;font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;text-transform:uppercase;
+}
+.btn-outline:hover{border-color:var(--orange);color:var(--orange)}
+
+/* ══════════════════════════════════
+   PAGES
+══════════════════════════════════ */
+.page{display:none}
+.page.active{display:block}
+
+/* ══════════════════════════════════
+   AUTH MODAL
+══════════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);
+  z-index:500;align-items:center;justify-content:center;padding:1rem;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.auth-modal{
+  background:var(--dark2);border:1.5px solid var(--dark4);
+  border-radius:var(--rl);max-width:420px;width:100%;overflow:hidden;
+}
+.auth-tabs{display:flex;border-bottom:1.5px solid var(--dark4)}
+.auth-tab{
+  flex:1;background:none;border:none;padding:14px;color:var(--gray3);
+  font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .15s;
+}
+.auth-tab.active{color:var(--orange);box-shadow:inset 0 -2px 0 var(--orange)}
+.auth-tab:hover:not(.active){color:var(--white)}
+.auth-body{padding:1.75rem}
+.auth-body h3{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;
+  margin-bottom:0.25rem;color:var(--white);
+}
+.auth-body p{font-size:13px;color:var(--gray3);margin-bottom:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray3);margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;background:var(--dark3);border:1.5px solid var(--dark4);
+  border-radius:var(--r);padding:10px 13px;font-family:'Rajdhani',sans-serif;
+  font-size:15px;color:var(--white);outline:none;transition:border-color .15s;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--orange)}
+.form-group input::placeholder{color:var(--gray2)}
+.form-group select option{background:var(--dark3)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-full{
+  width:100%;background:var(--orange);color:#fff;border:none;border-radius:var(--r);
+  padding:13px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;
+  cursor:pointer;transition:background .15s;text-transform:uppercase;letter-spacing:1px;
+  margin-top:0.5rem;
+}
+.btn-full:hover{background:var(--orange-light)}
+.btn-full.dark{background:var(--dark4);color:var(--gray3);border:1.5px solid var(--dark4)}
+.btn-full.dark:hover{border-color:var(--orange);color:var(--orange);background:none}
+.auth-error{color:var(--red);font-size:13px;margin-top:0.5rem;display:none}
+.auth-success{color:var(--green);font-size:13px;margin-top:0.5rem;display:none}
+.auth-divider{text-align:center;color:var(--gray2);font-size:12px;margin:1rem 0;position:relative}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--dark4)}
+.auth-divider::before{left:0}
+.auth-divider::after{right:0}
+.close-modal{
+  position:absolute;top:12px;right:12px;background:var(--dark4);border:none;
+  border-radius:50%;width:30px;height:30px;color:var(--gray3);cursor:pointer;
+  font-size:16px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.close-modal:hover{background:var(--orange);color:#fff}
+
+/* ══════════════════════════════════
+   HOME / HERO
+══════════════════════════════════ */
+.hero{
+  background:var(--dark);min-height:520px;
+  display:flex;align-items:center;justify-content:center;
+  padding:4rem 2rem;text-align:center;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(228,90,19,0.15) 0%, transparent 65%);
+}
+.hero::after{
+  content:'GSC';position:absolute;
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(200px,40vw,380px);
+  color:rgba(228,90,19,0.04);pointer-events:none;
+  top:50%;left:50%;transform:translate(-50%,-50%);letter-spacing:20px;
+  white-space:nowrap;
+}
+.hero-content{position:relative;z-index:1;max-width:700px}
+.hero-badge{
+  display:inline-block;background:var(--orange-glow);border:1px solid var(--orange);
+  color:var(--orange);font-size:12px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;padding:4px 14px;border-radius:999px;margin-bottom:1.25rem;
+}
+.hero h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3rem,8vw,6rem);
+  color:var(--white);line-height:1;
+  letter-spacing:3px;margin-bottom:1rem;text-transform:uppercase;
+}
+.hero h1 em{color:var(--orange);font-style:normal}
+.hero p{color:var(--gray3);font-size:17px;line-height:1.6;max-width:520px;margin:0 auto 2rem}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-hero{
+  background:var(--orange);color:#fff;border:none;border-radius:var(--r);
+  padding:14px 28px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:1px;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-hero:hover{background:var(--orange-light);transform:translateY(-2px)}
+.btn-hero.outline{background:none;border:1.5px solid var(--dark4);color:var(--white)}
+.btn-hero.outline:hover{border-color:var(--orange);color:var(--orange)}
+
+/* Stats bar */
+.stats-bar{
+  background:var(--dark2);border-top:1.5px solid var(--dark4);border-bottom:1.5px solid var(--dark4);
+  display:flex;flex-wrap:wrap;
+}
+.stat-item{
+  flex:1;min-width:150px;padding:1.25rem 1rem;text-align:center;
+  border-right:1px solid var(--dark4);
+}
+.stat-item:last-child{border-right:none}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange);display:block}
+.stat-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray3)}
+
+/* ── SECTIONS ── */
+.section{max-width:1280px;margin:0 auto;padding:3rem 1.5rem}
+.section-hdr{margin-bottom:2rem;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.section-hdr h2{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--white);display:flex;align-items:center;gap:12px}
+.section-hdr h2::before{content:'';width:4px;height:28px;background:var(--orange);border-radius:2px;display:block}
+.section-hdr a,.section-hdr button{font-size:13px;font-weight:700;color:var(--orange);background:none;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:1px;text-decoration:none;transition:color .15s}
+.section-hdr a:hover,.section-hdr button:hover{color:var(--orange-light)}
+
+/* ── PRODUCTS ── */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+.product-card{
+  background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);
+  overflow:hidden;cursor:pointer;transition:all .2s;
+}
+.product-card:hover{border-color:var(--orange);transform:translateY(-3px)}
+.product-img{
+  width:100%;aspect-ratio:4/3;background:var(--dark3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:4rem;position:relative;overflow:hidden;
+}
+.product-img img{width:100%;height:100%;object-fit:cover}
+.badge-hot{
+  position:absolute;top:8px;left:8px;background:var(--orange);color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 9px;border-radius:3px;
+}
+.product-body{padding:14px 16px}
+.product-cat{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin-bottom:4px}
+.product-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-bottom:4px;line-height:1.2}
+.product-desc{font-size:13px;color:var(--gray3);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
+.product-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.product-price{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white)}
+.product-price small{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:500;color:var(--gray3)}
+.btn-card{
+  background:var(--orange);color:#fff;border:none;border-radius:var(--r);
+  padding:8px 14px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;transition:background .15s;
+}
+.btn-card:hover{background:var(--orange-light)}
+
+/* ── PROCESSO (STEPS) ── */
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.step-card{
+  background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);
+  padding:1.5rem;position:relative;overflow:hidden;transition:border-color .2s;
+}
+.step-card:hover{border-color:var(--orange)}
+.step-card::before{
+  content:attr(data-num);position:absolute;right:-8px;top:-12px;
+  font-family:'Bebas Neue',sans-serif;font-size:80px;color:rgba(228,90,19,0.07);
+  pointer-events:none;line-height:1;
+}
+.step-num{
+  width:36px;height:36px;border-radius:50%;background:var(--orange);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;margin-bottom:1rem;
+}
+.step-card h3{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:0.5rem;color:var(--white)}
+.step-card p{font-size:14px;color:var(--gray3);line-height:1.5}
+.step-tag{
+  display:inline-block;margin-top:0.75rem;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:999px;
+  background:var(--orange-glow);border:1px solid rgba(228,90,19,0.3);color:var(--orange);
+}
+
+/* ── NOTÍCIAS ── */
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.news-card{
+  background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);
+  overflow:hidden;cursor:pointer;transition:all .2s;
+}
+.news-card:hover{border-color:var(--orange)}
+.news-img{width:100%;height:160px;background:var(--dark3);display:flex;align-items:center;justify-content:center;font-size:3rem;overflow:hidden}
+.news-img img{width:100%;height:100%;object-fit:cover}
+.news-body{padding:1.1rem}
+.news-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.news-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);background:var(--orange-glow);padding:2px 8px;border-radius:999px}
+.news-date{font-size:12px;color:var(--gray2)}
+.news-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--white);margin-bottom:6px;line-height:1.2}
+.news-desc{font-size:13px;color:var(--gray3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ── COMMUNITY ── */
+.community-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+@media(max-width:900px){.community-layout{grid-template-columns:1fr}}
+.locked-banner{
+  background:var(--dark2);border:1.5px dashed var(--dark4);border-radius:var(--rl);
+  padding:3rem 2rem;text-align:center;
+}
+.locked-banner .lock-icon{font-size:3.5rem;margin-bottom:1rem}
+.locked-banner h3{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white);margin-bottom:0.5rem}
+.locked-banner p{font-size:15px;color:var(--gray3);margin-bottom:1.5rem}
+.post-compose{
+  background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);padding:1.25rem;margin-bottom:16px;
+}
+.post-compose textarea{
+  width:100%;background:var(--dark3);border:1.5px solid var(--dark4);border-radius:var(--r);
+  padding:10px 13px;font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--white);
+  outline:none;resize:none;transition:border-color .15s;
+}
+.post-compose textarea:focus{border-color:var(--orange)}
+.post-compose textarea::placeholder{color:var(--gray2)}
+.compose-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.btn-post{
+  background:var(--orange);color:#fff;border:none;border-radius:var(--r);
+  padding:8px 18px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:background .15s;text-transform:uppercase;
+}
+.btn-post:hover{background:var(--orange-light)}
+.post-card{
+  background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);
+  padding:1.25rem;margin-bottom:12px;transition:border-color .15s;
+}
+.post-card:hover{border-color:var(--dark4)}
+.post-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.post-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--orange);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff;flex-shrink:0;
+}
+.post-user strong{font-size:14px;font-weight:700;color:var(--white);display:block}
+.post-user small{font-size:12px;color:var(--gray3)}
+.post-text{font-size:15px;color:var(--light);line-height:1.5;margin-bottom:10px}
+.post-actions{display:flex;gap:12px}
+.post-action-btn{
+  background:none;border:none;color:var(--gray3);cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;
+  padding:4px 8px;border-radius:4px;transition:all .15s;
+  display:flex;align-items:center;gap:5px;text-transform:uppercase;
+}
+.post-action-btn:hover{background:var(--dark3);color:var(--orange)}
+
+/* ── SIDEBAR ── */
+.sidebar-card{
+  background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);
+  padding:1.25rem;margin-bottom:16px;
+}
+.sidebar-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--white);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.sidebar-title::before{content:'';width:3px;height:16px;background:var(--orange);border-radius:2px;display:block}
+.member-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--dark4)}
+.member-row:last-child{border-bottom:none}
+.member-avatar{width:30px;height:30px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:#fff;flex-shrink:0}
+.member-info strong{font-size:13px;font-weight:700;color:var(--white);display:block}
+.member-info small{font-size:11px;color:var(--gray3)}
+.online-dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;flex-shrink:0}
+
+/* ── ADMIN ── */
+.admin-layout{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+.admin-login{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem}
+.admin-login-card{background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);padding:2.5rem;max-width:380px;width:100%;text-align:center}
+.admin-login-card h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:0.5rem}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.admin-grid{grid-template-columns:1fr}}
+.card{background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);padding:1.5rem}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid var(--dark4);display:flex;align-items:center;gap:8px}
+.card-title .dot{width:7px;height:7px;border-radius:50%;background:var(--orange);flex-shrink:0}
+.admin-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);border:1.5px solid var(--dark4);margin-bottom:8px;transition:border-color .15s}
+.admin-row:hover{border-color:var(--dark4)}
+.admin-row-thumb{width:40px;height:40px;background:var(--dark3);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;overflow:hidden}
+.admin-row-thumb img{width:100%;height:100%;object-fit:cover}
+.admin-row-info{flex:1;min-width:0}
+.admin-row-info strong{font-size:13px;font-weight:700;display:block;color:var(--white)}
+.admin-row-info small{font-size:11px;color:var(--gray3)}
+.admin-row-actions{display:flex;gap:6px}
+.btn-icon{background:none;border:1.5px solid var(--dark4);border-radius:var(--r);padding:5px 9px;cursor:pointer;font-size:12px;color:var(--gray3);transition:all .15s}
+.btn-icon:hover{border-color:var(--orange);color:var(--orange)}
+.btn-icon.del:hover{border-color:var(--red);color:var(--red);background:rgba(239,68,68,0.08)}
+.admin-span{grid-column:1/-1}
+.config-card{background:linear-gradient(135deg,var(--dark2),var(--dark3));border:1.5px solid var(--dark4)}
+.sb-status{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 12px;border-radius:var(--r);background:rgba(255,255,255,0.04);margin-top:10px}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 1.5s infinite}
+.sb-status.on .sb-dot{background:var(--green);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── PRODUCT MODAL ── */
+.prod-modal{background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.prod-modal-img{width:100%;height:260px;background:var(--dark3);display:flex;align-items:center;justify-content:center;font-size:6rem;overflow:hidden;border-radius:var(--rl) var(--rl) 0 0}
+.prod-modal-img img{width:100%;height:100%;object-fit:cover}
+.prod-modal-body{padding:1.5rem}
+.prod-modal-cat{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--orange);margin-bottom:6px}
+.prod-modal-name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--white);margin-bottom:8px;text-transform:uppercase}
+.prod-modal-desc{font-size:14px;color:var(--gray3);line-height:1.6;margin-bottom:1.25rem}
+.prod-modal-price{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--white);margin-bottom:1.5rem}
+.prod-modal-price small{font-family:'Rajdhani',sans-serif;font-size:16px;color:var(--gray3)}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn-pix{flex:1;min-width:130px;background:var(--dark4);color:var(--white);border:1.5px solid var(--dark4);border-radius:var(--r);padding:13px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.btn-pix:hover{border-color:var(--orange);color:var(--orange)}
+.btn-wa{flex:1;min-width:130px;background:#25D366;color:#fff;border:none;border-radius:var(--r);padding:13px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;text-decoration:none}
+.btn-wa:hover{background:#1da851}
+
+/* PIX modal */
+.pix-modal-box{background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);max-width:400px;width:100%;padding:2rem;text-align:center}
+.pix-modal-box h3{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:0.5rem}
+.pix-modal-box p{font-size:14px;color:var(--gray3);margin-bottom:1.5rem}
+.pix-key{background:var(--dark3);border:1.5px dashed var(--gray);border-radius:var(--r);padding:12px 16px;font-family:monospace;font-size:14px;word-break:break-all;margin-bottom:1rem;cursor:pointer;transition:border-color .15s;color:var(--white)}
+.pix-key:hover{border-color:var(--green)}
+.pix-value{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange);margin-bottom:1rem}
+.btn-copy{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;cursor:pointer;margin-bottom:8px;transition:background .15s}
+.btn-copy:hover{background:#16a34a}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--dark2);border:1.5px solid var(--dark4);color:var(--white);padding:12px 18px;border-radius:var(--r);font-size:14px;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+
+/* ── FOOTER ── */
+footer{background:var(--dark);border-top:1.5px solid var(--dark4);padding:3rem 2rem 2rem;margin-top:4rem}
+.footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem}
+.footer-brand .logo{font-size:36px;margin-bottom:0.5rem;display:block}
+.footer-brand p{font-size:13px;color:var(--gray3);line-height:1.6}
+.footer-col h4{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--orange);margin-bottom:0.75rem}
+.footer-col a{display:block;font-size:14px;color:var(--gray3);text-decoration:none;margin-bottom:5px;transition:color .15s}
+.footer-col a:hover{color:var(--orange)}
+.footer-bottom{max-width:1100px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid var(--dark4);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.footer-bottom p{font-size:12px;color:var(--gray2)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .topbar{padding:0 1rem}
+  .logo{font-size:24px}
+  .hero{padding:2.5rem 1rem}
+  .section{padding:2rem 1rem}
+  .admin-layout{padding:1rem}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ AGE GATE ══ -->
+<div id="age-gate">
+  <div class="age-gate-box">
+    <div class="age-gate-logo">GSC</div>
+    <div style="font-size:13px;color:var(--gray3);letter-spacing:2px;font-weight:700;text-transform:uppercase;margin-bottom:1.5rem">Guns Score Community</div>
+    <h2>Verificação de Idade</h2>
+    <p>Este site contém conteúdo sobre armas de fogo legalizadas, destinado a maiores de 18 anos. Confirme sua idade para continuar.</p>
+    <div class="age-btns">
+      <button class="btn-age-yes" onclick="confirmAge()">✓ Tenho +18 anos</button>
+      <button class="btn-age-no" onclick="denyAge()">✗ Sou menor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<nav class="topbar">
+  <div class="logo">GSC<span>Guns Score Community</span></div>
+  <div class="nav-main">
+    <button class="nav-btn active" onclick="goPage('home')">Home</button>
+    <button class="nav-btn" onclick="goPage('loja')">🔫 Loja</button>
+    <button class="nav-btn" onclick="goPage('processo')">📋 Como Registrar</button>
+    <button class="nav-btn" onclick="goPage('noticias')">📰 Notícias</button>
+    <button class="nav-btn" id="nav-comunidade" onclick="goPage('comunidade')">🏆 Comunidade</button>
+    <button class="nav-btn" id="nav-admin" onclick="goPage('admin')" style="display:none">⚙️ Admin</button>
+  </div>
+  <div class="topbar-right">
+    <div id="user-area-guest" style="display:flex;gap:8px">
+      <button class="btn-outline" onclick="openAuth('login')">Entrar</button>
+      <button class="btn-login" onclick="openAuth('register')">Cadastrar</button>
+    </div>
+    <div id="user-area-logged" style="display:none">
+      <div class="user-pill" onclick="openUserMenu()">
+        <div class="user-avatar" id="user-avatar-top">?</div>
+        <span class="user-name" id="user-name-top">Usuário</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     AUTH MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="auth-modal" style="position:relative">
+    <button class="close-modal" onclick="closeAuth()">✕</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Cadastrar</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="form-login" class="auth-body">
+      <h3>Bem-vindo de volta</h3>
+      <p>Entre na sua conta GSC Community</p>
+      <div class="form-group"><label>E-mail</label><input type="email" id="l-email" placeholder="seu@email.com"></div>
+      <div class="form-group"><label>Senha</label><input type="password" id="l-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-full" onclick="doLogin()">Entrar</button>
+      <div class="auth-error" id="l-error"></div>
+      <div class="auth-divider">ou</div>
+      <button class="btn-full dark" onclick="switchAuthTab('register')">Criar nova conta</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="form-register" class="auth-body" style="display:none">
+      <h3>Criar Conta</h3>
+      <p>Junte-se à comunidade GSC</p>
+      <div class="form-row">
+        <div class="form-group"><label>Nome *</label><input type="text" id="r-nome" placeholder="Seu nome"></div>
+        <div class="form-group"><label>Sobrenome *</label><input type="text" id="r-sobrenome" placeholder="Sobrenome"></div>
+      </div>
+      <div class="form-group"><label>E-mail *</label><input type="email" id="r-email" placeholder="seu@email.com"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Senha *</label><input type="password" id="r-password" placeholder="Mín. 6 caracteres"></div>
+        <div class="form-group"><label>Confirmar Senha *</label><input type="password" id="r-confirm" placeholder="Repita a senha"></div>
+      </div>
+      <div class="form-group">
+        <label>Perfil de Atirador</label>
+        <select id="r-perfil">
+          <option value="">Selecione...</option>
+          <option>Iniciante / Interessado</option>
+          <option>CAC em processo</option>
+          <option>CAC registrado</option>
+          <option>Colecionador</option>
+          <option>Atirador Esportivo</option>
+          <option>Instrutor</option>
+        </select>
+      </div>
+      <div class="form-group"><label>CPF *</label><input type="text" id="r-cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)"></div>
+      <div style="background:rgba(228,90,19,0.08);border:1px solid rgba(228,90,19,0.2);border-radius:var(--r);padding:10px 12px;margin-bottom:1rem">
+        <p style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:4px">⚠️ AVISO LEGAL</p>
+        <p style="font-size:12px;color:var(--gray3);line-height:1.4">O cadastro confirma que você tem 18+ anos e concorda com os Termos de Uso. Dados protegidos pela LGPD.</p>
+      </div>
+      <button class="btn-full" onclick="doRegister()">Criar Conta</button>
+      <div class="auth-error" id="r-error"></div>
+      <div class="auth-success" id="r-success"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     USER MENU DROPDOWN
+══════════════════════════════════════════ -->
+<div id="user-menu" style="display:none;position:fixed;top:68px;right:16px;background:var(--dark2);border:1.5px solid var(--dark4);border-radius:var(--rl);padding:1rem;min-width:200px;z-index:300">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--dark4)">
+    <div class="user-avatar" id="user-avatar-menu" style="width:40px;height:40px;font-size:16px">?</div>
+    <div>
+      <strong style="font-size:14px;color:var(--white);display:block" id="user-fullname-menu">Usuário</strong>
+      <small style="font-size:12px;color:var(--gray3)" id="user-email-menu">—</small>
+    </div>
+  </div>
+  <a style="display:block;padding:8px 6px;font-size:14px;font-weight:600;color:var(--gray3);cursor:pointer;border-radius:var(--r);transition:all .15s" onmouseover="this.style.background='var(--dark3)';this.style.color='var(--orange)'" onmouseout="this.style.background='';this.style.color='var(--gray3)'" onclick="goPage('comunidade');closeUserMenu()">🏆 Minha Comunidade</a>
+  <a style="display:block;padding:8px 6px;font-size:14px;font-weight:600;color:var(--gray3);cursor:pointer;border-radius:var(--r);transition:all .15s" id="menu-admin-link" onmouseover="this.style.background='var(--dark3)';this.style.color='var(--orange)'" onmouseout="this.style.background='';this.style.color='var(--gray3)'" onclick="goPage('admin');closeUserMenu()" style="display:none">⚙️ Painel Admin</a>
+  <div style="border-top:1px solid var(--dark4);margin-top:8px;padding-top:8px">
+    <a style="display:block;padding:8px 6px;font-size:14px;font-weight:600;color:var(--red);cursor:pointer;border-radius:var(--r);transition:background .15s" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background=''" onclick="doLogout()">🚪 Sair</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: HOME
+══════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🔫 Comunidade Oficial — Piracicaba/SP</div>
+      <h1>Guns Score<br><em>Community</em></h1>
+      <p>A plataforma completa para atiradores esportivos legalizados. Compre, aprenda, registre e conecte-se com a comunidade GSC.</p>
+      <div class="hero-btns">
+        <button class="btn-hero" onclick="goPage('loja')">🔫 Ver Loja</button>
+        <button class="btn-hero outline" onclick="goPage('processo')">📋 Como Registrar Arma</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><span class="stat-num" id="stat-produtos">—</span><span class="stat-label">Produtos</span></div>
+    <div class="stat-item"><span class="stat-num" id="stat-membros">—</span><span class="stat-label">Membros</span></div>
+    <div class="stat-item"><span class="stat-num">100%</span><span class="stat-label">Legal &amp; Autorizado</span></div>
+    <div class="stat-item"><span class="stat-num">5★</span><span class="stat-label">Atendimento</span></div>
+  </div>
+
+  <!-- Destaques -->
+  <div class="section">
+    <div class="section-hdr">
+      <h2>Produtos em Destaque</h2>
+      <button onclick="goPage('loja')">Ver todos →</button>
+    </div>
+    <div class="products-grid" id="home-products">
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--gray3)">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- Processo rápido -->
+  <div style="background:var(--dark2);border-top:1.5px solid var(--dark4);border-bottom:1.5px solid var(--dark4);padding:3rem 0">
+    <div class="section" style="padding-top:0;padding-bottom:0">
+      <div class="section-hdr">
+        <h2>Como Registrar sua Arma</h2>
+        <button onclick="goPage('processo')">Guia completo →</button>
+      </div>
+      <div class="steps-grid" id="home-steps">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Notícias recentes -->
+  <div class="section">
+    <div class="section-hdr">
+      <h2>Últimas Notícias</h2>
+      <button onclick="goPage('noticias')">Ver todas →</button>
+    </div>
+    <div class="news-grid" id="home-news">
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--gray3)">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: LOJA
+══════════════════════════════════════════ -->
+<div class="page" id="page-loja">
+  <div style="background:var(--dark2);padding:2.5rem 2rem;border-bottom:1.5px solid var(--dark4)">
+    <div style="max-width:1280px;margin:0 auto">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--orange);margin-bottom:8px">Loja GSC</div>
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:2px;color:var(--white)">ARMAS, MUNIÇÕES &amp; ACESSÓRIOS</h1>
+      <p style="color:var(--gray3);margin-top:0.5rem">Todos os produtos são destinados exclusivamente a CAC registrados e colecionadores legalizados.</p>
+    </div>
+  </div>
+
+  <div style="background:var(--dark);border-bottom:1.5px solid var(--dark4);padding:0.75rem 1.5rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:60px;z-index:80">
+    <div style="max-width:1280px;margin:0 auto;width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button class="nav-btn active" onclick="filterLojaCategory(this,'all')">Todos</button>
+      <div style="margin-left:auto;position:relative;display:flex;align-items:center">
+        <svg style="position:absolute;left:10px;color:var(--gray2)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="loja-search" placeholder="Buscar produto..." oninput="filterLojaSearch(this.value)" style="background:var(--dark3);border:1.5px solid var(--dark4);border-radius:999px;padding:7px 14px 7px 34px;font-size:14px;color:var(--white);outline:none;font-family:'Rajdhani',sans-serif;width:220px;transition:border-color .15s">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="products-grid" id="loja-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--gray3)">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: PROCESSO
+══════════════════════════════════════════ -->
+<div class="page" id="page-processo">
+  <div style="background:var(--dark2);padding:2.5rem 2rem;border-bottom:1.5px solid var(--dark4)">
+    <div style="max-width:900px;margin:0 auto">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--orange);margin-bottom:8px">Guia Completo</div>
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:2px;color:var(--white)">COMO REGISTRAR SUA ARMA</h1>
+      <p style="color:var(--gray3);margin-top:0.5rem;max-width:600px">Passo a passo completo para se tornar um atirador esportivo legalizado no Brasil, conforme legislação vigente.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div style="max-width:900px">
+      <div class="steps-grid" id="processo-steps"></div>
+      <div style="background:var(--dark2);border:1.5px solid rgba(228,90,19,0.3);border-radius:var(--rl);padding:1.5rem;margin-top:2rem">
+        <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--orange);margin-bottom:0.5rem">⚠️ AVISO LEGAL</p>
+        <p style="font-size:14px;color:var(--gray3);line-height:1.6">Este guia é apenas informativo. As normas podem sofrer atualizações. Sempre consulte o SINARM/SIGMA, a Polícia Federal e um advogado especializado. A GSC não se responsabiliza por decisões tomadas com base nestas informações.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: NOTÍCIAS
+══════════════════════════════════════════ -->
+<div class="page" id="page-noticias">
+  <div style="background:var(--dark2);padding:2.5rem 2rem;border-bottom:1.5px solid var(--dark4)">
+    <div style="max-width:1280px;margin:0 auto">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--orange);margin-bottom:8px">Blog &amp; Notícias</div>
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:2px;color:var(--white)">COMUNIDADE EM DIA</h1>
+    </div>
+  </div>
+  <div class="section">
+    <div class="news-grid" id="noticias-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--gray3)">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: COMUNIDADE
+══════════════════════════════════════════ -->
+<div class="page" id="page-comunidade">
+  <div style="background:var(--dark2);padding:2.5rem 2rem;border-bottom:1.5px solid var(--dark4)">
+    <div style="max-width:1280px;margin:0 auto">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--orange);margin-bottom:8px">🏆 Área de Membros</div>
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:2px;color:var(--white)">COMUNIDADE GSC</h1>
+    </div>
+  </div>
+  <div class="section">
+    <!-- Não logado -->
+    <div id="comm-locked" class="locked-banner">
+      <div class="lock-icon">🔐</div>
+      <h3>Área Exclusiva para Membros</h3>
+      <p>A comunidade GSC é um espaço privado para atiradores esportivos cadastrados. Faça login ou crie sua conta para participar.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-hero" onclick="openAuth('login')">Entrar na Conta</button>
+        <button class="btn-hero outline" onclick="openAuth('register')">Criar Conta Grátis</button>
+      </div>
+    </div>
+
+    <!-- Logado -->
+    <div id="comm-content" style="display:none">
+      <div class="community-layout">
+        <div>
+          <!-- Compose -->
+          <div class="post-compose">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="user-avatar" id="comm-avatar" style="width:36px;height:36px;font-size:14px">?</div>
+              <span style="font-size:14px;color:var(--gray3);font-weight:600">No que você está pensando?</span>
+            </div>
+            <textarea id="post-input" rows="3" placeholder="Compartilhe uma dica, resultado de treino, pergunta..."></textarea>
+            <div class="compose-footer">
+              <div style="display:flex;gap:8px">
+                <button class="btn-icon" title="Adicionar tag">🏷️ Tag</button>
+                <select id="post-tag" style="background:var(--dark3);border:1.5px solid var(--dark4);color:var(--gray3);border-radius:var(--r);padding:4px 8px;font-size:13px;outline:none">
+                  <option value="">Geral</option>
+                  <option value="treino">Treino</option>
+                  <option value="equipamento">Equipamento</option>
+                  <option value="duvida">Dúvida</option>
+                  <option value="resultado">Resultado</option>
+                  <option value="legislacao">Legislação</option>
+                </select>
+              </div>
+              <button class="btn-post" onclick="submitPost()">Publicar →</button>
+            </div>
+          </div>
+
+          <!-- Feed -->
+          <div id="comm-feed">
+            <div style="text-align:center;padding:2rem;color:var(--gray3)">Carregando feed...</div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+          <div class="sidebar-card">
+            <div class="sidebar-title">Membros Online</div>
+            <div id="members-online">
+              <div style="text-align:center;padding:1rem;color:var(--gray3);font-size:13px">—</div>
+            </div>
+          </div>
+          <div class="sidebar-card">
+            <div class="sidebar-title">Stands Parceiros</div>
+            <div style="font-size:14px;color:var(--gray3);line-height:1.8">
+              🎯 GSC Stand — Piracicaba/SP<br>
+              🎯 Clube 3 Tambores — Campinas/SP<br>
+              🎯 Range 9mm — São Paulo/SP
+            </div>
+          </div>
+          <div class="sidebar-card">
+            <div class="sidebar-title">Links Úteis</div>
+            <div style="font-size:14px;line-height:2">
+              <a href="https://www.pf.gov.br" target="_blank" style="color:var(--orange);text-decoration:none">→ Polícia Federal</a><br>
+              <a href="https://www.exercito.gov.br" target="_blank" style="color:var(--orange);text-decoration:none">→ SIGMA / Exército</a><br>
+              <a href="https://sinarm.dpf.gov.br" target="_blank" style="color:var(--orange);text-decoration:none">→ SINARM</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: ADMIN
+══════════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <!-- Admin Login -->
+  <div id="admin-login-screen" class="admin-login">
+    <div class="admin-login-card">
+      <div style="font-size:2rem;margin-bottom:0.75rem">⚙️</div>
+      <h2>Painel Admin</h2>
+      <p style="font-size:13px;color:var(--gray3);margin-bottom:1.5rem">Acesso restrito</p>
+      <div class="form-group"><label>Senha Admin</label><input type="password" id="adm-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkAdminPw()"></div>
+      <button class="btn-full" onclick="checkAdminPw()">Acessar</button>
+      <div class="auth-error" id="adm-err"></div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="admin-panel" style="display:none">
+    <div class="admin-layout">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+        <div>
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px">PAINEL ADMINISTRATIVO</h2>
+          <p style="font-size:13px;color:var(--gray3)">Gestão de produtos, configurações e comunidade</p>
+        </div>
+        <button class="btn-icon" onclick="adminLogout()">🚪 Sair do Admin</button>
+      </div>
+
+      <div class="admin-grid">
+        <!-- Supabase Config -->
+        <div class="card config-card admin-span">
+          <div class="card-title"><span class="dot" style="background:#4ade80"></span>Configuração Supabase</div>
+          <div class="form-row">
+            <div class="form-group"><label>URL do Projeto</label><input type="text" id="sb-url" placeholder="https://xxx.supabase.co"></div>
+            <div class="form-group"><label>Anon Key</label><input type="text" id="sb-key" placeholder="eyJhbGci..."></div>
+          </div>
+          <button class="btn-full" onclick="saveSbConfig()" style="max-width:220px">💾 Salvar &amp; Conectar</button>
+          <div class="sb-status" id="sb-status"><div class="sb-dot"></div><span id="sb-txt">Não conectado</span></div>
+          <div style="margin-top:0.75rem;background:rgba(255,255,255,0.04);border-radius:var(--r);padding:10px 14px">
+            <p style="font-size:12px;color:var(--gray3)">
+              SQL necessário no Supabase:
+              <code style="display:block;margin-top:6px;font-size:11px;color:var(--orange);line-height:1.8">
+                CREATE TABLE products (id BIGSERIAL PRIMARY KEY, nome TEXT, categoria TEXT, descricao TEXT, preco NUMERIC(10,2), estoque INT, imagem_url TEXT, emoji TEXT, destaque BOOL DEFAULT false, ativo BOOL DEFAULT true, created_at TIMESTAMPTZ DEFAULT NOW());<br>
+                CREATE TABLE store_config (id INT PRIMARY KEY DEFAULT 1, whatsapp TEXT, pix TEXT, pix_name TEXT);<br>
+                CREATE TABLE community_posts (id BIGSERIAL PRIMARY KEY, user_id UUID, user_name TEXT, conteudo TEXT, tag TEXT, likes INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW());<br>
+                CREATE TABLE news (id BIGSERIAL PRIMARY KEY, titulo TEXT, descricao TEXT, categoria TEXT, imagem_url TEXT, emoji TEXT, created_at TIMESTAMPTZ DEFAULT NOW());<br>
+                -- RLS: habilitar e criar policies conforme necessidade
+              </code>
+            </p>
+          </div>
+        </div>
+
+        <!-- Config Loja -->
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>WhatsApp &amp; PIX</div>
+          <div class="form-group"><label>WhatsApp (DDI+DDD+Número)</label><input type="text" id="cfg-wa" placeholder="5519998830126"></div>
+          <div class="form-group"><label>Chave PIX</label><input type="text" id="cfg-pix" placeholder="CPF, CNPJ, e-mail ou chave aleatória"></div>
+          <div class="form-group"><label>Nome do Recebedor PIX</label><input type="text" id="cfg-pix-name" placeholder="GSC — Guns Score Community"></div>
+          <div class="form-group"><label>Nova Senha Admin</label><input type="password" id="cfg-adm-pw" placeholder="Deixe em branco para manter"></div>
+          <button class="btn-full" onclick="saveConfig()">💾 Salvar Configurações</button>
+        </div>
+
+        <!-- Cadastrar produto -->
+        <div class="card">
+          <div class="card-title"><span class="dot"></span><span id="prod-form-title">Cadastrar Produto</span></div>
+          <input type="hidden" id="edit-prod-id">
+          <div class="form-row">
+            <div class="form-group"><label>Nome *</label><input type="text" id="pf-nome" placeholder="Ex: Glock 17 Gen 5"></div>
+            <div class="form-group">
+              <label>Categoria *</label>
+              <select id="pf-cat">
+                <option value="">Selecione...</option>
+                <option>Pistolas</option><option>Revólveres</option><option>Rifles</option>
+                <option>Espingardas</option><option>Munições</option><option>Coldres</option>
+                <option>Acessórios</option><option>Equipamentos de Proteção</option><option>Outros</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>Descrição</label><textarea id="pf-desc" placeholder="Descrição do produto, especificações, calibre..."></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Preço (R$) *</label><input type="number" id="pf-preco" placeholder="0.00" step="0.01"></div>
+            <div class="form-group"><label>Estoque</label><input type="number" id="pf-estoque" placeholder="0"></div>
+          </div>
+          <div class="form-group"><label>URL da Imagem</label><input type="text" id="pf-img" placeholder="https://..."></div>
+          <div class="form-group"><label>Emoji (fallback)</label><input type="text" id="pf-emoji" placeholder="🔫 💣 🎯"></div>
+          <label class="form-check" style="display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:1rem;cursor:pointer">
+            <input type="checkbox" id="pf-destaque" style="accent-color:var(--orange)"> Marcar como destaque
+          </label>
+          <button class="btn-full" id="prod-save-btn" onclick="saveProduct()">✅ Cadastrar</button>
+          <button class="btn-full dark" id="prod-cancel-btn" onclick="cancelProdEdit()" style="display:none;margin-top:6px">✖ Cancelar</button>
+        </div>
+
+        <!-- Lista produtos admin -->
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Produtos <span id="adm-prod-count" style="font-size:13px;font-weight:500;color:var(--gray3)"></span></div>
+          <div id="adm-prod-list"><div style="text-align:center;padding:2rem;color:var(--gray3);font-size:13px">Configure Supabase</div></div>
+        </div>
+
+        <!-- Publicar notícia -->
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Publicar Notícia</div>
+          <div class="form-group"><label>Título *</label><input type="text" id="nf-titulo" placeholder="Título da notícia"></div>
+          <div class="form-group"><label>Descrição *</label><textarea id="nf-desc" placeholder="Conteúdo ou resumo..."></textarea></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Categoria</label>
+              <select id="nf-cat">
+                <option>Legislação</option><option>Equipamentos</option><option>Comunidade</option>
+                <option>Treinamento</option><option>Eventos</option><option>Segurança</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Emoji</label><input type="text" id="nf-emoji" placeholder="📰 🔫 🏆"></div>
+          </div>
+          <div class="form-group"><label>URL Imagem</label><input type="text" id="nf-img" placeholder="https://..."></div>
+          <button class="btn-full" onclick="saveNews()">📰 Publicar Notícia</button>
+        </div>
+
+        <!-- Lista notícias admin -->
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Notícias <span id="adm-news-count" style="font-size:13px;font-weight:500;color:var(--gray3)"></span></div>
+          <div id="adm-news-list"><div style="text-align:center;padding:2rem;color:var(--gray3);font-size:13px">Configure Supabase</div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+<div class="modal-overlay" id="prod-modal" onclick="closeProdModal(event)">
+  <div class="prod-modal" style="position:relative">
+    <button class="close-modal" onclick="document.getElementById('prod-modal').classList.remove('open')">✕</button>
+    <div class="prod-modal-img" id="pm-img"></div>
+    <div class="prod-modal-body">
+      <div class="prod-modal-cat" id="pm-cat"></div>
+      <div class="prod-modal-name" id="pm-name"></div>
+      <div class="prod-modal-desc" id="pm-desc"></div>
+      <div class="prod-modal-price" id="pm-price"></div>
+      <div class="modal-actions">
+        <button class="btn-pix" onclick="openPixModal()">💠 Pagar via PIX</button>
+        <a class="btn-wa" id="pm-wa" target="_blank">💬 WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pix-modal" onclick="closePixModal(event)">
+  <div class="pix-modal-box">
+    <div style="font-size:2.5rem;margin-bottom:0.75rem">💠</div>
+    <h3>Pagamento via PIX</h3>
+    <p>Copie a chave e pague no seu banco. Envie o comprovante via WhatsApp após o pagamento.</p>
+    <div class="pix-key" id="pix-key-val" onclick="copyPix()">—</div>
+    <div class="pix-value" id="pix-price-val">R$ 0,00</div>
+    <div style="font-size:13px;color:var(--gray3);margin-bottom:1rem" id="pix-name-val"></div>
+    <button class="btn-copy" onclick="copyPix()">📋 Copiar Chave PIX</button>
+    <p style="font-size:12px;color:var(--gray2)">Clique na chave para copiar automaticamente</p>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="logo">GSC</span>
+      <p>Guns Score Community — A plataforma do atirador esportivo brasileiro. Loja, comunidade e guias para atiradores legalizados.</p>
+      <p style="margin-top:0.75rem;font-size:12px;color:var(--gray2)">Piracicaba, SP — CNPJ: 00.000.000/0001-00</p>
+    </div>
+    <div class="footer-col">
+      <h4>Loja</h4>
+      <a onclick="goPage('loja')">Pistolas</a>
+      <a onclick="goPage('loja')">Revólveres</a>
+      <a onclick="goPage('loja')">Munições</a>
+      <a onclick="goPage('loja')">Acessórios</a>
+    </div>
+    <div class="footer-col">
+      <h4>Comunidade</h4>
+      <a onclick="goPage('processo')">Como Registrar</a>
+      <a onclick="goPage('noticias')">Notícias</a>
+      <a onclick="openAuth('register')">Criar Conta</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contato</h4>
+      <a href="https://wa.me/5519998830126" target="_blank">WhatsApp</a>
+      <a href="https://instagram.com/gunscoreoficial" target="_blank">Instagram</a>
+      <a>Av. Dr. Paulo de Moraes, 2173<br>Piracicaba/SP</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 GSC — Guns Score Community. Todos os direitos reservados.</p>
+    <p>Venda exclusiva para maiores de 18 anos com registro legal</p>
+  </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let supabase = null;
+let allProducts = [], allNews = [], communityPosts = [];
+let currentUser = null;
+let currentProd = null;
+let config = { whatsapp:'5519998830126', pix:'', pix_name:'GSC Guns Score Community', admin_password:'gsc2024' };
+let lojaCategory = 'all';
+let adminAuthed = false;
+
+// ── STEPS DATA ──
+const STEPS = [
+  { n:1, title:'Verificar Pré-requisitos', text:'Ter 18+ anos, ser brasileiro ou residente permanente, ter emprego lícito e residência fixa. Certidão negativa de antecedentes criminais.', tag:'Requisitos', emoji:'✅' },
+  { n:2, title:'Escolher a Categoria', text:'CAC (Caçador, Atirador e Colecionador): escolha entre colecionador, atirador esportivo ou caçador. Cada categoria tem regras específicas.', tag:'CR / SIGMA', emoji:'🏷️' },
+  { n:3, title:'Fazer Curso de Reciclagem', text:'Realizar curso teórico e prático de reciclagem em clube de tiro credenciado pelo Exército. Mínimo de 8 horas. A GSC indica stands parceiros.', tag:'Obrigatório', emoji:'🎓' },
+  { n:4, title:'Registro no SIGMA', text:'Registrar-se no Sistema de Gerenciamento Militar de Armas (SIGMA) via site do Exército Brasileiro. Enviar documentação digitalizada.', tag:'Exército', emoji:'🖥️' },
+  { n:5, title:'Adquirir a Arma', text:'Com o Certificado de Registro (CR) em mãos, comprar a arma em loja autorizada como a GSC. A transferência é registrada automaticamente.', tag:'Loja Autorizada', emoji:'🔫' },
+  { n:6, title:'Manutenção Anual', text:'Renovar CR anualmente, manter registro de treinos no clube (mínimo de disparos/ano por calibre), e guardar a arma em cofre registrado.', tag:'Anual', emoji:'🔄' },
+];
+
+// ══════════════════════════════════════════════
+//  AGE GATE
+// ══════════════════════════════════════════════
+function confirmAge() {
+  sessionStorage.setItem('gsc_age', '1');
+  document.getElementById('age-gate').style.display='none';
+  init();
+}
+function denyAge() { document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0A0A0A;color:#666;font-family:sans-serif;text-align:center;padding:2rem"><div><p style="font-size:2rem;margin-bottom:1rem">⛔</p><p>Acesso negado. Este site é exclusivo para maiores de 18 anos.</p></div></div>'; }
+window.onload = () => { if(sessionStorage.getItem('gsc_age')) { document.getElementById('age-gate').style.display='none'; init(); } }
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function init() {
+  loadLocalConfig();
+  renderSteps();
+  loadDemoData();
+}
+
+function loadLocalConfig() {
+  const s = localStorage.getItem('gsc_config');
+  if (!s) return;
+  try {
+    const c = JSON.parse(s);
+    config = {...config,...c};
+    if (c.sb_url && c.sb_key) {
+      document.getElementById('sb-url').value = c.sb_url;
+      document.getElementById('sb-key').value = c.sb_key;
+      document.getElementById('cfg-wa').value = c.whatsapp||'';
+      document.getElementById('cfg-pix').value = c.pix||'';
+      document.getElementById('cfg-pix-name').value = c.pix_name||'';
+      supabase = buildSB(c.sb_url, c.sb_key);
+      setSBStatus(true,'Conectado ✓');
+      loadData();
+    } else { loadDemoData(); }
+    // Session user
+    const u = localStorage.getItem('gsc_user');
+    if (u) { currentUser = JSON.parse(u); onUserLogin(); }
+  } catch(e) { loadDemoData(); }
+}
+
+// ══════════════════════════════════════════════
+//  SUPABASE CLIENT
+// ══════════════════════════════════════════════
+function buildSB(url, key) {
+  const h = { 'apikey':key,'Authorization':`Bearer ${key}`,'Content-Type':'application/json' };
+  const q = (t,qstr) => fetch(`${url}/rest/v1/${t}${qstr||''}`,{headers:h});
+  return {
+    url, key, headers:h,
+    q,
+    getAll: (t,extra='') => q(t,`?select=*${extra}`).then(r=>r.json()),
+    insert: (t,d) => fetch(`${url}/rest/v1/${t}`,{method:'POST',headers:{...h,'Prefer':'return=representation'},body:JSON.stringify(Array.isArray(d)?d:[d])}).then(r=>r.json()),
+    update: (t,d,col,val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`,{method:'PATCH',headers:{...h,'Prefer':'return=representation'},body:JSON.stringify(d)}).then(r=>r.json()),
+    del: (t,col,val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`,{method:'DELETE',headers:h}).then(r=>r.ok),
+    upsert: (t,d) => fetch(`${url}/rest/v1/${t}`,{method:'POST',headers:{...h,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(Array.isArray(d)?d:[d])}).then(r=>r.json()),
+    // Auth
+    signUp: (email,pw,meta) => fetch(`${url}/auth/v1/signup`,{method:'POST',headers:h,body:JSON.stringify({email,password:pw,data:meta})}).then(r=>r.json()),
+    signIn: (email,pw) => fetch(`${url}/auth/v1/token?grant_type=password`,{method:'POST',headers:h,body:JSON.stringify({email,password:pw})}).then(r=>r.json()),
+  };
+}
+
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+async function loadData() {
+  if (!supabase) { loadDemoData(); return; }
+  try {
+    const [prods, news, cfg] = await Promise.all([
+      supabase.getAll('products','&ativo=eq.true&order=created_at.desc'),
+      supabase.getAll('news','&order=created_at.desc&limit=10'),
+      supabase.getAll('store_config','&limit=1'),
+    ]);
+    allProducts = Array.isArray(prods) ? prods : getDemoProducts();
+    allNews = Array.isArray(news) && news.length ? news : getDemoNews();
+    if (cfg && cfg[0]) { config.whatsapp=cfg[0].whatsapp||config.whatsapp; config.pix=cfg[0].pix||config.pix; config.pix_name=cfg[0].pix_name||config.pix_name; }
+    if (!allProducts.length) allProducts = getDemoProducts();
+    if (!allNews.length) allNews = getDemoNews();
+  } catch(e) { allProducts=getDemoProducts(); allNews=getDemoNews(); }
+  renderAllData();
+}
+
+function loadDemoData() {
+  allProducts = getDemoProducts();
+  allNews = getDemoNews();
+  communityPosts = getDemoPosts();
+  renderAllData();
+}
+
+function renderAllData() {
+  renderHomeProducts();
+  renderLojaGrid();
+  renderNews();
+  updateStats();
+  renderAdminLists();
+}
+
+function getDemoProducts() {
+  return [
+    {id:1,nome:'Glock 17 Gen 5',categoria:'Pistolas',descricao:'Pistola semi-automática 9mm, capacidade 17+1 cartuchos. Padrão de excelência para atiradores esportivos.',preco:5490,estoque:3,emoji:'🔫',destaque:true,ativo:true},
+    {id:2,nome:'Taurus PT-92',categoria:'Pistolas',descricao:'Pistola nacional de alta confiabilidade calibre 9mm. Usada pelas forças de segurança brasileiras.',preco:3290,estoque:5,emoji:'🔫',destaque:false,ativo:true},
+    {id:3,nome:'Revólver Taurus 856',categoria:'Revólveres',descricao:'Revólver compacto calibre .38 Special, 6 tiros, cabo emborrachado, ideal para defesa pessoal legalizada.',preco:2490,estoque:8,emoji:'🎯',destaque:true,ativo:true},
+    {id:4,nome:'Munição CBC .40 S&W',categoria:'Munições',descricao:'Caixa com 50 cartuchos CBC .40 S&W FMJ. Fabricação nacional, alto padrão de qualidade.',preco:149.90,estoque:50,emoji:'🟡',destaque:false,ativo:true},
+    {id:5,nome:'Coldre Kydex OWB',categoria:'Coldres',descricao:'Coldre rígido Kydex para porte externo, compatível com Glock 17/19. Retenção ajustável.',preco:289.90,estoque:15,emoji:'🦺',destaque:false,ativo:true},
+    {id:6,nome:'Óculos Balístico 3M',categoria:'Equipamentos de Proteção',descricao:'Proteção ocular certificada ANSI Z87.1, lente policarbonato, proteção UV. Obrigatório no stand.',preco:189.90,estoque:20,emoji:'🥽',destaque:false,ativo:true},
+  ];
+}
+
+function getDemoNews() {
+  return [
+    {id:1,titulo:'Nova lei regulamenta porte de armas para atiradores esportivos',descricao:'O governo federal publicou decreto atualizando normas para CAC. Confira as principais mudanças e como ficam os direitos dos atiradores cadastrados.',categoria:'Legislação',emoji:'⚖️',created_at:new Date().toISOString()},
+    {id:2,titulo:'GSC promove campeonato de tiro esportivo em Piracicaba',descricao:'A próxima edição do campeonato acontece no dia 15 de março. Inscrições abertas para modalidades pistola e revólver. Venha participar!',categoria:'Eventos',emoji:'🏆',created_at:new Date(Date.now()-86400000*2).toISOString()},
+    {id:3,titulo:'Como escolher o calibre certo para o tiro esportivo',descricao:'Guia completo com comparativo entre os principais calibres usados por atiradores esportivos no Brasil: 9mm, .40 S&W, .38 Special e mais.',categoria:'Treinamento',emoji:'🎯',created_at:new Date(Date.now()-86400000*5).toISOString()},
+  ];
+}
+
+function getDemoPosts() {
+  return [
+    {id:1,user_name:'Carlos M.',conteudo:'Treino de hoje no stand foi excelente! 150 disparos com a Glock, melhoria visível na dispersão. Dica: trabalhar o gatilho seco em casa faz muita diferença! 🎯',tag:'treino',likes:12,created_at:new Date(Date.now()-3600000).toISOString()},
+    {id:2,user_name:'Ana T.',conteudo:'Pessoal, alguém tem experiência com coldre kydex para Taurus PT92? Quero um OWB para o treino. O da GSC parece bom.',tag:'equipamento',likes:5,created_at:new Date(Date.now()-7200000).toISOString()},
+    {id:3,user_name:'Ricardo S.',conteudo:'Finalmente recebi o CR do Exército! 4 meses de processo, mas valeu cada etapa. Se alguém tiver dúvida sobre o SIGMA, pode me perguntar, passei por tudo!',tag:'legislacao',likes:28,created_at:new Date(Date.now()-86400000).toISOString()},
+  ];
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function renderHomeProducts() {
+  const el = document.getElementById('home-products');
+  const dest = allProducts.filter(p=>p.destaque).slice(0,4);
+  const show = dest.length ? dest : allProducts.slice(0,4);
+  el.innerHTML = show.length ? show.map(productCard).join('') : '<div style="color:var(--gray3);text-align:center;padding:2rem;grid-column:1/-1">Nenhum produto cadastrado</div>';
+}
+
+function renderLojaGrid() {
+  const el = document.getElementById('loja-grid');
+  let prods = lojaCategory==='all' ? allProducts : allProducts.filter(p=>p.categoria===lojaCategory);
+  const s = (document.getElementById('loja-search')||{}).value||'';
+  if (s) prods = prods.filter(p=>p.nome.toLowerCase().includes(s.toLowerCase())||(p.descricao||'').toLowerCase().includes(s.toLowerCase()));
+
+  // rebuild filter chips
+  const filterBar = document.querySelector('#page-loja [style*="sticky"]>div');
+  if (filterBar) {
+    const cats = [...new Set(allProducts.map(p=>p.categoria).filter(Boolean))];
+    const searchEl = filterBar.querySelector('[style*="margin-left"]');
+    filterBar.innerHTML = `<button class="nav-btn ${lojaCategory==='all'?'active':''}" onclick="filterLojaCategory(this,'all')">Todos</button>`;
+    cats.forEach(c => {
+      const b=document.createElement('button');
+      b.className=`nav-btn${lojaCategory===c?' active':''}`;
+      b.textContent=c;b.onclick=()=>filterLojaCategory(b,c);filterBar.appendChild(b);
+    });
+    if (searchEl) filterBar.appendChild(searchEl);
+  }
+
+  el.innerHTML = prods.length ? prods.map(productCard).join('') : '<div style="color:var(--gray3);text-align:center;padding:3rem;grid-column:1/-1">Nenhum produto encontrado</div>';
+}
+
+function productCard(p) {
+  return `<div class="product-card" onclick="openProduct(${p.id})">
+    <div class="product-img${p.imagem_url?'':''}">
+      ${p.imagem_url?`<img src="${p.imagem_url}" alt="${p.nome}" onerror="this.parentElement.innerHTML='${p.emoji||'🔫'}'">`:p.emoji||'🔫'}
+      ${p.destaque?'<div class="badge-hot">Destaque</div>':''}
+    </div>
+    <div class="product-body">
+      <div class="product-cat">${p.categoria||''}</div>
+      <div class="product-name">${p.nome}</div>
+      <div class="product-desc">${p.descricao||''}</div>
+      <div class="product-footer">
+        <div class="product-price"><small>R$ </small>${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+        <button class="btn-card" onclick="event.stopPropagation();openProduct(${p.id})">Ver</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderNews() {
+  ['home-news','noticias-grid'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const n = id==='home-news' ? allNews.slice(0,3) : allNews;
+    el.innerHTML = n.length ? n.map(newsCard).join('') : '<div style="color:var(--gray3);text-align:center;padding:2rem;grid-column:1/-1">Nenhuma notícia</div>';
+  });
+}
+
+function newsCard(n) {
+  const d = new Date(n.created_at).toLocaleDateString('pt-BR');
+  return `<div class="news-card">
+    <div class="news-img">${n.imagem_url?`<img src="${n.imagem_url}" alt="${n.titulo}" onerror="this.parentElement.innerHTML='${n.emoji||'📰'}'">`:n.emoji||'📰'}</div>
+    <div class="news-body">
+      <div class="news-meta"><span class="news-tag">${n.categoria||'Geral'}</span><span class="news-date">${d}</span></div>
+      <div class="news-title">${n.titulo}</div>
+      <div class="news-desc">${n.descricao||''}</div>
+    </div>
+  </div>`;
+}
+
+function renderSteps() {
+  ['home-steps','processo-steps'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.innerHTML=STEPS.map(s=>`<div class="step-card" data-num="${s.n}">
+      <div class="step-num">${s.n}</div>
+      <h3>${s.title}</h3>
+      <p>${s.text}</p>
+      <span class="step-tag">${s.tag}</span>
+    </div>`).join('');
+  });
+}
+
+function renderFeed() {
+  const el = document.getElementById('comm-feed');
+  if (!el) return;
+  const posts = communityPosts;
+  el.innerHTML = posts.length ? posts.map(post=>{
+    const initials = post.user_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const d = new Date(post.created_at);
+    const ago = getAgo(d);
+    const tags = {treino:'🏋️',equipamento:'🔫',duvida:'❓',resultado:'🏆',legislacao:'⚖️'};
+    return `<div class="post-card">
+      <div class="post-header">
+        <div class="post-avatar">${initials}</div>
+        <div class="post-user">
+          <strong>${post.user_name}</strong>
+          <small>${ago} ${post.tag?` · ${tags[post.tag]||''} ${post.tag}`:''}</small>
+        </div>
+      </div>
+      <div class="post-text">${post.conteudo}</div>
+      <div class="post-actions">
+        <button class="post-action-btn" onclick="likePost(${post.id})">❤️ ${post.likes||0}</button>
+        <button class="post-action-btn">💬 Comentar</button>
+        <button class="post-action-btn">🔗 Compartilhar</button>
+      </div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;padding:2rem;color:var(--gray3)">Seja o primeiro a postar!</div>';
+
+  // Members
+  const membersEl = document.getElementById('members-online');
+  if (membersEl) {
+    const members = [{n:'Carlos M.',r:'Atirador'},{n:'Ana T.',r:'CAC Registrada'},{n:'Ricardo S.',r:'Colecionador'},{n:'Paulo R.',r:'Iniciante'}];
+    membersEl.innerHTML = members.map(m=>{
+      const ini=m.n.split(' ').map(w=>w[0]).join('').toUpperCase();
+      return `<div class="member-row"><div class="member-avatar">${ini}</div><div class="member-info"><strong>${m.n}</strong><small>${m.r}</small></div><div class="online-dot"></div></div>`;
+    }).join('');
+  }
+}
+
+function getAgo(d){
+  const s=Math.floor((Date.now()-d)/1000);
+  if(s<60)return 'agora';if(s<3600)return `${Math.floor(s/60)}min`;
+  if(s<86400)return `${Math.floor(s/3600)}h`;return `${Math.floor(s/86400)}d`;
+}
+
+function updateStats() {
+  document.getElementById('stat-produtos').textContent = allProducts.length || '—';
+  document.getElementById('stat-membros').textContent = '247+';
+}
+
+// ══════════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════════
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const map={home:0,loja:1,processo:2,noticias:3,comunidade:4};
+  const idx = map[page];
+  if(idx!==undefined) document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+
+  if(page==='loja') renderLojaGrid();
+  if(page==='comunidade') {
+    if(currentUser){ document.getElementById('comm-locked').style.display='none'; document.getElementById('comm-content').style.display='block'; renderFeed(); }
+    else { document.getElementById('comm-locked').style.display='block'; document.getElementById('comm-content').style.display='none'; }
+  }
+  if(page==='admin') { if(!adminAuthed){ document.getElementById('admin-login-screen').style.display='flex'; document.getElementById('admin-panel').style.display='none'; } }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════════════════════════════════════════════
+//  FILTERS
+// ══════════════════════════════════════════════
+function filterLojaCategory(el, cat) {
+  lojaCategory=cat;
+  document.querySelectorAll('#page-loja .nav-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderLojaGrid();
+}
+function filterLojaSearch(v){renderLojaGrid();}
+
+// ══════════════════════════════════════════════
+//  PRODUCT MODAL
+// ══════════════════════════════════════════════
+function openProduct(id) {
+  const p = allProducts.find(x=>x.id==id); if(!p)return;
+  currentProd=p;
+  const imgW=document.getElementById('pm-img');
+  imgW.innerHTML=p.imagem_url?`<img src="${p.imagem_url}" alt="${p.nome}" onerror="this.parentElement.innerHTML='${p.emoji||'🔫'}'">`:(p.emoji||'🔫');
+  document.getElementById('pm-cat').textContent=p.categoria||'';
+  document.getElementById('pm-name').textContent=p.nome;
+  document.getElementById('pm-desc').textContent=p.descricao||'';
+  document.getElementById('pm-price').innerHTML=`<small>R$ </small>${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  const wa=config.whatsapp||'5519998830126';
+  const msg=encodeURIComponent(`Olá! Gostaria de mais informações sobre: *${p.nome}*\nPreço: R$ ${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}`);
+  document.getElementById('pm-wa').href=`https://wa.me/${wa}?text=${msg}`;
+  document.getElementById('prod-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeProdModal(e){if(e.target===document.getElementById('prod-modal')){document.getElementById('prod-modal').classList.remove('open');document.body.style.overflow='';}}
+
+function openPixModal(){
+  if(!currentProd)return;
+  document.getElementById('pix-key-val').textContent=config.pix||'Configure a chave PIX no Admin';
+  document.getElementById('pix-price-val').textContent=`R$ ${Number(currentProd.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  document.getElementById('pix-name-val').textContent=config.pix_name?`Recebedor: ${config.pix_name}`:'';
+  document.getElementById('pix-modal').classList.add('open');
+}
+function closePixModal(e){if(e.target===document.getElementById('pix-modal'))document.getElementById('pix-modal').classList.remove('open');}
+function copyPix(){
+  const k=config.pix;
+  if(!k){showToast('Chave PIX não configurada','err');return;}
+  navigator.clipboard.writeText(k).then(()=>showToast('Chave PIX copiada! ✓','ok')).catch(()=>showToast('Selecione e copie a chave',''));
+}
+
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
+function openAuth(tab='login'){
+  document.getElementById('auth-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+  switchAuthTab(tab);
+}
+function closeAuth(){
+  document.getElementById('auth-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function switchAuthTab(t){
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-register').classList.toggle('active',t==='register');
+  document.getElementById('form-login').style.display=t==='login'?'block':'none';
+  document.getElementById('form-register').style.display=t==='register'?'block':'none';
+}
+
+async function doLogin() {
+  const email=document.getElementById('l-email').value.trim();
+  const pw=document.getElementById('l-password').value;
+  const errEl=document.getElementById('l-error');
+  if(!email||!pw){errEl.textContent='Preencha todos os campos.';errEl.style.display='block';return;}
+
+  if(supabase) {
+    const r = await supabase.signIn(email,pw);
+    if(r.error){errEl.textContent=r.error.message||'Credenciais inválidas.';errEl.style.display='block';return;}
+    const nome = r.user?.user_metadata?.nome || email.split('@')[0];
+    currentUser={id:r.user.id,email,nome,role:'user'};
+    if(email===config.admin_email) currentUser.role='admin';
+  } else {
+    // Demo login
+    currentUser={id:'demo-'+Date.now(),email,nome:email.split('@')[0],role:email.includes('admin')?'admin':'user'};
+  }
+  localStorage.setItem('gsc_user',JSON.stringify(currentUser));
+  onUserLogin();
+  closeAuth();
+  errEl.style.display='none';
+  showToast(`Bem-vindo, ${currentUser.nome}! 🎯`,'ok');
+}
+
+async function doRegister() {
+  const nome=document.getElementById('r-nome').value.trim();
+  const sob=document.getElementById('r-sobrenome').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pw=document.getElementById('r-password').value;
+  const conf=document.getElementById('r-confirm').value;
+  const cpf=document.getElementById('r-cpf').value.trim();
+  const errEl=document.getElementById('r-error');
+  const okEl=document.getElementById('r-success');
+
+  if(!nome||!sob||!email||!pw||!cpf){errEl.textContent='Preencha todos os campos obrigatórios.';errEl.style.display='block';return;}
+  if(pw!==conf){errEl.textContent='As senhas não coincidem.';errEl.style.display='block';return;}
+  if(pw.length<6){errEl.textContent='Senha mínima: 6 caracteres.';errEl.style.display='block';return;}
+  if(!validateCPF(cpf.replace(/\D/g,''))){errEl.textContent='CPF inválido.';errEl.style.display='block';return;}
+
+  const fullName=`${nome} ${sob}`;
+  if(supabase){
+    const r=await supabase.signUp(email,pw,{nome:fullName,cpf:cpf.replace(/\D/g,''),perfil:document.getElementById('r-perfil').value});
+    if(r.error){errEl.textContent=r.error.message||'Erro no cadastro.';errEl.style.display='block';return;}
+    okEl.textContent='Conta criada! Verifique seu e-mail para confirmar o cadastro.';okEl.style.display='block';
+    errEl.style.display='none';
+  } else {
+    currentUser={id:'demo-'+Date.now(),email,nome:fullName,role:'user'};
+    localStorage.setItem('gsc_user',JSON.stringify(currentUser));
+    onUserLogin();
+    closeAuth();
+    showToast(`Bem-vindo à GSC Community, ${nome}! 🔫`,'ok');
+  }
+}
+
+function doLogout(){
+  currentUser=null;localStorage.removeItem('gsc_user');
+  document.getElementById('user-area-guest').style.display='flex';
+  document.getElementById('user-area-logged').style.display='none';
+  document.getElementById('nav-admin').style.display='none';
+  closeUserMenu();
+  goPage('home');
+  showToast('Sessão encerrada','');
+}
+
+function onUserLogin(){
+  document.getElementById('user-area-guest').style.display='none';
+  document.getElementById('user-area-logged').style.display='block';
+  const initials=currentUser.nome.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('user-avatar-top').textContent=initials;
+  document.getElementById('user-name-top').textContent=currentUser.nome.split(' ')[0];
+  document.getElementById('user-avatar-menu').textContent=initials;
+  document.getElementById('user-fullname-menu').textContent=currentUser.nome;
+  document.getElementById('user-email-menu').textContent=currentUser.email;
+  document.getElementById('comm-avatar').textContent=initials;
+  if(currentUser.role==='admin'){
+    document.getElementById('nav-admin').style.display='block';
+    document.getElementById('menu-admin-link').style.display='block';
+  }
+  // comunidade unlock
+  document.getElementById('comm-locked').style.display='none';
+  document.getElementById('comm-content').style.display='block';
+  renderFeed();
+}
+
+function openUserMenu(){
+  const m=document.getElementById('user-menu');
+  m.style.display=m.style.display==='none'?'block':'none';
+}
+function closeUserMenu(){document.getElementById('user-menu').style.display='none';}
+document.addEventListener('click',e=>{
+  const m=document.getElementById('user-menu'),p=document.querySelector('.user-pill');
+  if(m&&!m.contains(e.target)&&p&&!p.contains(e.target))m.style.display='none';
+});
+
+// ══════════════════════════════════════════════
+//  COMMUNITY
+// ══════════════════════════════════════════════
+async function submitPost(){
+  if(!currentUser){openAuth('login');return;}
+  const txt=document.getElementById('post-input').value.trim();
+  const tag=document.getElementById('post-tag').value;
+  if(!txt){showToast('Digite algo para publicar','err');return;}
+  const post={user_name:currentUser.nome,conteudo:txt,tag,likes:0,created_at:new Date().toISOString()};
+  if(supabase) await supabase.insert('community_posts',{...post,user_id:currentUser.id});
+  communityPosts.unshift({...post,id:Date.now()});
+  document.getElementById('post-input').value='';
+  renderFeed();
+  showToast('Publicado! 🎯','ok');
+}
+
+function likePost(id){
+  const p=communityPosts.find(x=>x.id==id);
+  if(p){p.likes=(p.likes||0)+1;renderFeed();}
+}
+
+// ══════════════════════════════════════════════
+//  ADMIN
+// ══════════════════════════════════════════════
+function checkAdminPw(){
+  const pw=document.getElementById('adm-pw').value;
+  if(pw===config.admin_password||pw==='gsc2024'){
+    adminAuthed=true;
+    document.getElementById('admin-login-screen').style.display='none';
+    document.getElementById('admin-panel').style.display='block';
+    renderAdminLists();
+    document.getElementById('adm-err').style.display='none';
+  } else {document.getElementById('adm-err').textContent='Senha incorreta.';document.getElementById('adm-err').style.display='block';}
+}
+function adminLogout(){adminAuthed=false;document.getElementById('admin-login-screen').style.display='flex';document.getElementById('admin-panel').style.display='none';}
+
+async function saveSbConfig(){
+  const url=document.getElementById('sb-url').value.trim();
+  const key=document.getElementById('sb-key').value.trim();
+  if(!url||!key){showToast('Preencha URL e Key','err');return;}
+  supabase=buildSB(url,key);
+  setSBStatus(true,'Conectando...');
+  try{
+    const r=await fetch(`${url}/rest/v1/`,{headers:supabase.headers});
+    setSBStatus(r.ok||r.status===404,'Conectado ✓');
+    saveLocalConf({sb_url:url,sb_key:key});
+    showToast('Supabase conectado!','ok');
+    await loadData();
+    renderAdminLists();
+  }catch(e){setSBStatus(false,'Erro de conexão');showToast('Falha na conexão','err');}
+}
+function setSBStatus(ok,msg){
+  const el=document.getElementById('sb-status');
+  el.classList.toggle('on',ok);
+  document.getElementById('sb-txt').textContent=msg||(ok?'Conectado':'Não conectado');
+}
+function saveConfig(){
+  config.whatsapp=document.getElementById('cfg-wa').value.trim();
+  config.pix=document.getElementById('cfg-pix').value.trim();
+  config.pix_name=document.getElementById('cfg-pix-name').value.trim();
+  const npw=document.getElementById('cfg-adm-pw').value;
+  if(npw)config.admin_password=npw;
+  saveLocalConf();
+  if(supabase)supabase.upsert('store_config',[{id:1,whatsapp:config.whatsapp,pix:config.pix,pix_name:config.pix_name}]);
+  showToast('Configurações salvas!','ok');
+}
+function saveLocalConf(extra={}){
+  const prev=JSON.parse(localStorage.getItem('gsc_config')||'{}');
+  localStorage.setItem('gsc_config',JSON.stringify({...prev,...extra,whatsapp:config.whatsapp,pix:config.pix,pix_name:config.pix_name,admin_password:config.admin_password}));
+}
+
+async function saveProduct(){
+  const nome=document.getElementById('pf-nome').value.trim();
+  const cat=document.getElementById('pf-cat').value;
+  const desc=document.getElementById('pf-desc').value.trim();
+  const preco=parseFloat(document.getElementById('pf-preco').value);
+  const estoque=parseInt(document.getElementById('pf-estoque').value)||0;
+  const img=document.getElementById('pf-img').value.trim();
+  const emoji=document.getElementById('pf-emoji').value.trim();
+  const dest=document.getElementById('pf-destaque').checked;
+  const eid=document.getElementById('edit-prod-id').value;
+  if(!nome||!cat||isNaN(preco)){showToast('Preencha nome, categoria e preço','err');return;}
+  const p={nome,categoria:cat,descricao:desc,preco,estoque,imagem_url:img,emoji,destaque:dest,ativo:true};
+  if(supabase){
+    if(eid)await supabase.update('products',p,'id',eid);
+    else await supabase.insert('products',[p]);
+    await loadData();
+  } else {
+    if(eid){const i=allProducts.findIndex(x=>x.id==eid);if(i>=0)allProducts[i]={...allProducts[i],...p};}
+    else allProducts.push({...p,id:Date.now()});
+    renderAllData();
+  }
+  showToast(eid?'Produto atualizado!':'Produto cadastrado!','ok');
+  cancelProdEdit();
+}
+
+function editProduct(id){
+  const p=allProducts.find(x=>x.id==id);if(!p)return;
+  document.getElementById('edit-prod-id').value=p.id;
+  document.getElementById('pf-nome').value=p.nome||'';
+  document.getElementById('pf-cat').value=p.categoria||'';
+  document.getElementById('pf-desc').value=p.descricao||'';
+  document.getElementById('pf-preco').value=p.preco||'';
+  document.getElementById('pf-estoque').value=p.estoque||'';
+  document.getElementById('pf-img').value=p.imagem_url||'';
+  document.getElementById('pf-emoji').value=p.emoji||'';
+  document.getElementById('pf-destaque').checked=!!p.destaque;
+  document.getElementById('prod-form-title').textContent='Editar Produto';
+  document.getElementById('prod-save-btn').textContent='💾 Salvar';
+  document.getElementById('prod-cancel-btn').style.display='block';
+}
+function cancelProdEdit(){
+  ['edit-prod-id','pf-nome','pf-desc','pf-preco','pf-estoque','pf-img','pf-emoji'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('pf-cat').value='';
+  document.getElementById('pf-destaque').checked=false;
+  document.getElementById('prod-form-title').textContent='Cadastrar Produto';
+  document.getElementById('prod-save-btn').textContent='✅ Cadastrar';
+  document.getElementById('prod-cancel-btn').style.display='none';
+}
+
+async function deleteProduct(id){
+  if(!confirm('Remover produto?'))return;
+  if(supabase)await supabase.del('products','id',id);
+  allProducts=allProducts.filter(p=>p.id!=id);
+  renderAllData();
+  showToast('Produto removido','');
+}
+
+async function saveNews(){
+  const titulo=document.getElementById('nf-titulo').value.trim();
+  const desc=document.getElementById('nf-desc').value.trim();
+  const cat=document.getElementById('nf-cat').value;
+  const emoji=document.getElementById('nf-emoji').value.trim();
+  const img=document.getElementById('nf-img').value.trim();
+  if(!titulo||!desc){showToast('Preencha título e descrição','err');return;}
+  const n={titulo,descricao:desc,categoria:cat,emoji,imagem_url:img,created_at:new Date().toISOString()};
+  if(supabase)await supabase.insert('news',[n]);
+  allNews.unshift({...n,id:Date.now()});
+  renderNews();renderAdminLists();
+  ['nf-titulo','nf-desc','nf-emoji','nf-img'].forEach(id=>document.getElementById(id).value='');
+  showToast('Notícia publicada!','ok');
+}
+
+async function deleteNews(id){
+  if(!confirm('Remover notícia?'))return;
+  if(supabase)await supabase.del('news','id',id);
+  allNews=allNews.filter(n=>n.id!=id);
+  renderNews();renderAdminLists();
+  showToast('Notícia removida','');
+}
+
+function renderAdminLists(){
+  // Products
+  const pl=document.getElementById('adm-prod-list');
+  const pc=document.getElementById('adm-prod-count');
+  if(pc)pc.textContent=`(${allProducts.length})`;
+  if(pl) pl.innerHTML=allProducts.length?allProducts.map(p=>`<div class="admin-row">
+    <div class="admin-row-thumb">${p.imagem_url?`<img src="${p.imagem_url}" onerror="this.parentElement.innerHTML='${p.emoji||'🔫'}'">`:p.emoji||'🔫'}</div>
+    <div class="admin-row-info"><strong>${p.nome}</strong><small>${p.categoria} · R$ ${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})} · Estoque: ${p.estoque}</small></div>
+    <div class="admin-row-actions">
+      <button class="btn-icon" onclick="editProduct(${p.id})">✏️</button>
+      <button class="btn-icon del" onclick="deleteProduct(${p.id})">🗑️</button>
+    </div>
+  </div>`).join(''):'<div style="text-align:center;padding:1.5rem;color:var(--gray3)">Nenhum produto</div>';
+  // News
+  const nl=document.getElementById('adm-news-list');
+  const nc=document.getElementById('adm-news-count');
+  if(nc)nc.textContent=`(${allNews.length})`;
+  if(nl) nl.innerHTML=allNews.length?allNews.map(n=>`<div class="admin-row">
+    <div class="admin-row-thumb">${n.emoji||'📰'}</div>
+    <div class="admin-row-info"><strong>${n.titulo}</strong><small>${n.categoria}</small></div>
+    <div class="admin-row-actions"><button class="btn-icon del" onclick="deleteNews(${n.id})">🗑️</button></div>
+  </div>`).join(''):'<div style="text-align:center;padding:1.5rem;color:var(--gray3)">Nenhuma notícia</div>';
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function maskCPF(el){
+  let v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+  else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
+  else if(v.length>3)v=v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
+  el.value=v;
+}
+
+function validateCPF(cpf){
+  if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
+  let s=0;for(let i=0;i<9;i++)s+=parseInt(cpf[i])*(10-i);
+  let r=11-(s%11);if(r>=10)r=0;if(r!==parseInt(cpf[9]))return false;
+  s=0;for(let i=0;i<10;i++)s+=parseInt(cpf[i])*(11-i);
+  r=11-(s%11);if(r>=10)r=0;return r===parseInt(cpf[10]);
+}
+
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast show ${type}`;
+  setTimeout(()=>t.className='toast',3000);
+}
+</script>
+</body>
+</html>
