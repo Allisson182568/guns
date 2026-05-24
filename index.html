@@ -838,7 +838,15 @@ footer{background:var(--dark);border-top:1.5px solid var(--dark4);padding:3rem 2
                 CREATE TABLE store_config (id INT PRIMARY KEY DEFAULT 1, whatsapp TEXT, pix TEXT, pix_name TEXT);<br>
                 CREATE TABLE community_posts (id BIGSERIAL PRIMARY KEY, user_id UUID, user_name TEXT, conteudo TEXT, tag TEXT, likes INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW());<br>
                 CREATE TABLE news (id BIGSERIAL PRIMARY KEY, titulo TEXT, descricao TEXT, categoria TEXT, imagem_url TEXT, emoji TEXT, created_at TIMESTAMPTZ DEFAULT NOW());<br>
-                -- RLS: habilitar e criar policies conforme necessidade
+                ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+                ALTER TABLE store_config ENABLE ROW LEVEL SECURITY;
+                ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
+                ALTER TABLE news ENABLE ROW LEVEL SECURITY;
+
+                CREATE POLICY "allow_all_products" ON products FOR ALL USING (true) WITH CHECK (true);
+                CREATE POLICY "allow_all_store_config" ON store_config FOR ALL USING (true) WITH CHECK (true);
+                CREATE POLICY "allow_all_community_posts" ON community_posts FOR ALL USING (true) WITH CHECK (true);
+                CREATE POLICY "allow_all_news" ON news FOR ALL USING (true) WITH CHECK (true);
               </code>
             </p>
           </div>
@@ -1025,30 +1033,31 @@ window.onload = () => { if(sessionStorage.getItem('gsc_age')) { document.getElem
 //  INIT
 // ══════════════════════════════════════════════
 function init() {
-  loadLocalConfig();
   renderSteps();
-  loadDemoData();
+  loadLocalConfig();
 }
 
 function loadLocalConfig() {
   const s = localStorage.getItem('gsc_config');
-  if (!s) return;
+  if (!s) { loadDemoData(); return; }
   try {
     const c = JSON.parse(s);
     config = {...config,...c};
     if (c.sb_url && c.sb_key) {
-      document.getElementById('sb-url').value = c.sb_url;
-      document.getElementById('sb-key').value = c.sb_key;
-      document.getElementById('cfg-wa').value = c.whatsapp||'';
-      document.getElementById('cfg-pix').value = c.pix||'';
-      document.getElementById('cfg-pix-name').value = c.pix_name||'';
       supabase = buildSB(c.sb_url, c.sb_key);
       setSBStatus(true,'Conectado ✓');
+      // Preenche campos do Admin com segurança (elementos podem não estar visíveis ainda)
+      const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
+      setVal('sb-url', c.sb_url);
+      setVal('sb-key', c.sb_key);
+      setVal('cfg-wa', c.whatsapp);
+      setVal('cfg-pix', c.pix);
+      setVal('cfg-pix-name', c.pix_name);
       loadData();
     } else { loadDemoData(); }
-    // Session user
+    // Restaura sessão do usuário
     const u = localStorage.getItem('gsc_user');
-    if (u) { currentUser = JSON.parse(u); onUserLogin(); }
+    if (u) { try { currentUser = JSON.parse(u); onUserLogin(); } catch(e) { localStorage.removeItem('gsc_user'); } }
   } catch(e) { loadDemoData(); }
 }
 
@@ -1056,852 +1065,19 @@ function loadLocalConfig() {
 //  SUPABASE CLIENT
 // ══════════════════════════════════════════════
 function buildSB(url, key) {
-  const h = { 
-    'apikey': key,
-    'Authorization': `Bearer ${key}`,
-    'Content-Type': 'application/json' 
-  };
-  
-  const q = (t, qstr) => fetch(`${url}/rest/v1/${t}${qstr||''}`, { headers: h });
-  
+  const h = { 'apikey':key,'Authorization':`Bearer ${key}`,'Content-Type':'application/json' };
+  const q = (t,qstr) => fetch(`${url}/rest/v1/${t}${qstr||''}`,{headers:h});
   return {
-    url, key, headers: h,
+    url, key, headers:h,
     q,
-    // Mantém o mapeamento correto para as listas do Admin e da Loja
-    getAll: (t, extra='') => q(t, `?select=*${extra}`).then(async r => {
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        console.error(`Erro ao buscar em ${t}:`, err);
-        return [];
-      }
-      return r.json();
-    }),
-    
-    // Corrige o salvamento e retorna o array com o objeto criado/atualizado
-    insert: (t, d) => fetch(`${url}/rest/v1/${t}`, {
-      method: 'POST',
-      headers: { ...h, 'Prefer': 'return=representation' },
-      body: JSON.stringify(Array.isArray(d) ? d : [d])
-    }).then(async r => {
-      if (!r.ok) return [];
-      return r.json().catch(() => ([]));
-    }),
-    
-    // Garante que o PATCH retorne o registro atualizado para o estado global do app
-    update: (t, d, col, val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`, {
-      method: 'PATCH',
-      headers: { ...h, 'Prefer': 'return=representation' },
-      body: JSON.stringify(d)
-    }).then(async r => {
-      if (!r.ok) return [];
-      return r.json().catch(() => ([]));
-    }),
-    
-    del: (t, col, val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`, {
-      method: 'DELETE',
-      headers: h
-    }).then(r => r.ok),
-    
-    upsert: (t, d) => fetch(`${url}/rest/v1/${t}`, {
-      method: 'POST',
-      headers: { ...h, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify(Array.isArray(d) ? d : [d])
-    }).then(async r => {
-      if (!r.ok) return [];
-      return r.json().catch(() => ([]));
-    }),
-    
-    // Módulos de Autenticação
-    signUp: (email, pw, meta) => fetch(`${url}/auth/v1/signup`, { 
-      method: 'POST', 
-      headers: h, 
-      body: JSON.stringify({ email, password: pw, data: meta }) 
-    }).then(r => r.json()),
-    
-    signIn: (email, pw) => fetch(`${url}/auth/v1/token?grant_type=password`, { 
-      method: 'POST', 
-      headers: h, 
-      body: JSON.stringify({ email, password: pw }) 
-    }).then(r => r.json()),
-  };
-}
-
-// ══════════════════════════════════════════════
-//  DATA
-// ══════════════════════════════════════════════
-async function loadData() {
-  if (!supabase) { loadDemoData(); return; }
-  try {
-    const [prods, news, cfg] = await Promise.all([
-      supabase.getAll('products','&ativo=eq.true&order=created_at.desc'),
-      supabase.getAll('news','&order=created_at.desc&limit=10'),
-      supabase.getAll('store_config','&limit=1'),
-    ]);
-    allProducts = Array.isArray(prods) ? prods : getDemoProducts();
-    allNews = Array.isArray(news) && news.length ? news : getDemoNews();
-    if (cfg && cfg[0]) { config.whatsapp=cfg[0].whatsapp||config.whatsapp; config.pix=cfg[0].pix||config.pix; config.pix_name=cfg[0].pix_name||config.pix_name; }
-    if (!allProducts.length) allProducts = getDemoProducts();
-    if (!allNews.length) allNews = getDemoNews();
-  } catch(e) { allProducts=getDemoProducts(); allNews=getDemoNews(); }
-  renderAllData();
-}
-
-function loadDemoData() {
-  allProducts = getDemoProducts();
-  allNews = getDemoNews();
-  communityPosts = getDemoPosts();
-  renderAllData();
-}
-
-function renderAllData() {
-  renderHomeProducts();
-  renderLojaGrid();
-  renderNews();
-  updateStats();
-  renderAdminLists();
-}
-
-function getDemoProducts() {
-  return [
-    {id:1,nome:'Glock 17 Gen 5',categoria:'Pistolas',descricao:'Pistola semi-automática 9mm, capacidade 17+1 cartuchos. Padrão de excelência para atiradores esportivos.',preco:5490,estoque:3,emoji:'🔫',destaque:true,ativo:true},
-    {id:2,nome:'Taurus PT-92',categoria:'Pistolas',descricao:'Pistola nacional de alta confiabilidade calibre 9mm. Usada pelas forças de segurança brasileiras.',preco:3290,estoque:5,emoji:'🔫',destaque:false,ativo:true},
-    {id:3,nome:'Revólver Taurus 856',categoria:'Revólveres',descricao:'Revólver compacto calibre .38 Special, 6 tiros, cabo emborrachado, ideal para defesa pessoal legalizada.',preco:2490,estoque:8,emoji:'🎯',destaque:true,ativo:true},
-    {id:4,nome:'Munição CBC .40 S&W',categoria:'Munições',descricao:'Caixa com 50 cartuchos CBC .40 S&W FMJ. Fabricação nacional, alto padrão de qualidade.',preco:149.90,estoque:50,emoji:'🟡',destaque:false,ativo:true},
-    {id:5,nome:'Coldre Kydex OWB',categoria:'Coldres',descricao:'Coldre rígido Kydex para porte externo, compatível com Glock 17/19. Retenção ajustável.',preco:289.90,estoque:15,emoji:'🦺',destaque:false,ativo:true},
-    {id:6,nome:'Óculos Balístico 3M',categoria:'Equipamentos de Proteção',descricao:'Proteção ocular certificada ANSI Z87.1, lente policarbonato, proteção UV. Obrigatório no stand.',preco:189.90,estoque:20,emoji:'🥽',destaque:false,ativo:true},
-  ];
-}
-
-function getDemoNews() {
-  return [
-    {id:1,titulo:'Nova lei regulamenta porte de armas para atiradores esportivos',descricao:'O governo federal publicou decreto atualizando normas para CAC. Confira as principais mudanças e como ficam os direitos dos atiradores cadastrados.',categoria:'Legislação',emoji:'⚖️',created_at:new Date().toISOString()},
-    {id:2,titulo:'GSC promove campeonato de tiro esportivo em Piracicaba',descricao:'A próxima edição do campeonato acontece no dia 15 de março. Inscrições abertas para modalidades pistola e revólver. Venha participar!',categoria:'Eventos',emoji:'🏆',created_at:new Date(Date.now()-86400000*2).toISOString()},
-    {id:3,titulo:'Como escolher o calibre certo para o tiro esportivo',descricao:'Guia completo com comparativo entre os principais calibres usados por atiradores esportivos no Brasil: 9mm, .40 S&W, .38 Special e mais.',categoria:'Treinamento',emoji:'🎯',created_at:new Date(Date.now()-86400000*5).toISOString()},
-  ];
-}
-
-function getDemoPosts() {
-  return [
-    {id:1,user_name:'Carlos M.',conteudo:'Treino de hoje no stand foi excelente! 150 disparos com a Glock, melhoria visível na dispersão. Dica: trabalhar o gatilho seco em casa faz muita diferença! 🎯',tag:'treino',likes:12,created_at:new Date(Date.now()-3600000).toISOString()},
-    {id:2,user_name:'Ana T.',conteudo:'Pessoal, alguém tem experiência com coldre kydex para Taurus PT92? Quero um OWB para o treino. O da GSC parece bom.',tag:'equipamento',likes:5,created_at:new Date(Date.now()-7200000).toISOString()},
-    {id:3,user_name:'Ricardo S.',conteudo:'Finalmente recebi o CR do Exército! 4 meses de processo, mas valeu cada etapa. Se alguém tiver dúvida sobre o SIGMA, pode me perguntar, passei por tudo!',tag:'legislacao',likes:28,created_at:new Date(Date.now()-86400000).toISOString()},
-  ];
-}
-
-// ══════════════════════════════════════════════
-//  RENDER
-// ══════════════════════════════════════════════
-function renderHomeProducts() {
-  const el = document.getElementById('home-products');
-  const dest = allProducts.filter(p=>p.destaque).slice(0,4);
-  const show = dest.length ? dest : allProducts.slice(0,4);
-  el.innerHTML = show.length ? show.map(productCard).join('') : '<div style="color:var(--gray3);text-align:center;padding:2rem;grid-column:1/-1">Nenhum produto cadastrado</div>';
-}
-
-function renderLojaGrid() {
-  const el = document.getElementById('loja-grid');
-  let prods = lojaCategory==='all' ? allProducts : allProducts.filter(p=>p.categoria===lojaCategory);
-  const s = (document.getElementById('loja-search')||{}).value||'';
-  if (s) prods = prods.filter(p=>p.nome.toLowerCase().includes(s.toLowerCase())||(p.descricao||'').toLowerCase().includes(s.toLowerCase()));
-
-  // rebuild filter chips
-  const filterBar = document.querySelector('#page-loja [style*="sticky"]>div');
-  if (filterBar) {
-    const cats = [...new Set(allProducts.map(p=>p.categoria).filter(Boolean))];
-    const searchEl = filterBar.querySelector('[style*="margin-left"]');
-    filterBar.innerHTML = `<button class="nav-btn ${lojaCategory==='all'?'active':''}" onclick="filterLojaCategory(this,'all')">Todos</button>`;
-    cats.forEach(c => {
-      const b=document.createElement('button');
-      b.className=`nav-btn${lojaCategory===c?' active':''}`;
-      b.textContent=c;b.onclick=()=>filterLojaCategory(b,c);filterBar.appendChild(b);
-    });
-    if (searchEl) filterBar.appendChild(searchEl);
-  }
-
-  el.innerHTML = prods.length ? prods.map(productCard).join('') : '<div style="color:var(--gray3);text-align:center;padding:3rem;grid-column:1/-1">Nenhum produto encontrado</div>';
-}
-
-function productCard(p) {
-  return `<div class="product-card" onclick="openProduct(${p.id})">
-    <div class="product-img${p.imagem_url?'':''}">
-      ${p.imagem_url?`<img src="${p.imagem_url}" alt="${p.nome}" onerror="this.parentElement.innerHTML='${p.emoji||'🔫'}'">`:p.emoji||'🔫'}
-      ${p.destaque?'<div class="badge-hot">Destaque</div>':''}
-    </div>
-    <div class="product-body">
-      <div class="product-cat">${p.categoria||''}</div>
-      <div class="product-name">${p.nome}</div>
-      <div class="product-desc">${p.descricao||''}</div>
-      <div class="product-footer">
-        <div class="product-price"><small>R$ </small>${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
-        <button class="btn-card" onclick="event.stopPropagation();openProduct(${p.id})">Ver</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function renderNews() {
-  ['home-news','noticias-grid'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const n = id==='home-news' ? allNews.slice(0,3) : allNews;
-    el.innerHTML = n.length ? n.map(newsCard).join('') : '<div style="color:var(--gray3);text-align:center;padding:2rem;grid-column:1/-1">Nenhuma notícia</div>';
-  });
-}
-
-function newsCard(n) {
-  const d = new Date(n.created_at).toLocaleDateString('pt-BR');
-  return `<div class="news-card">
-    <div class="news-img">${n.imagem_url?`<img src="${n.imagem_url}" alt="${n.titulo}" onerror="this.parentElement.innerHTML='${n.emoji||'📰'}'">`:n.emoji||'📰'}</div>
-    <div class="news-body">
-      <div class="news-meta"><span class="news-tag">${n.categoria||'Geral'}</span><span class="news-date">${d}</span></div>
-      <div class="news-title">${n.titulo}</div>
-      <div class="news-desc">${n.descricao||''}</div>
-    </div>
-  </div>`;
-}
-
-function renderSteps() {
-  ['home-steps','processo-steps'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    el.innerHTML=STEPS.map(s=>`<div class="step-card" data-num="${s.n}">
-      <div class="step-num">${s.n}</div>
-      <h3>${s.title}</h3>
-      <p>${s.text}</p>
-      <span class="step-tag">${s.tag}</span>
-    </div>`).join('');
-  });
-}
-
-function renderFeed() {
-  const el = document.getElementById('comm-feed');
-  if (!el) return;
-  const posts = communityPosts;
-  el.innerHTML = posts.length ? posts.map(post=>{
-    const initials = post.user_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const d = new Date(post.created_at);
-    const ago = getAgo(d);
-    const tags = {treino:'🏋️',equipamento:'🔫',duvida:'❓',resultado:'🏆',legislacao:'⚖️'};
-    return `<div class="post-card">
-      <div class="post-header">
-        <div class="post-avatar">${initials}</div>
-        <div class="post-user">
-          <strong>${post.user_name}</strong>
-          <small>${ago} ${post.tag?` · ${tags[post.tag]||''} ${post.tag}`:''}</small>
-        </div>
-      </div>
-      <div class="post-text">${post.conteudo}</div>
-      <div class="post-actions">
-        <button class="post-action-btn" onclick="likePost(${post.id})">❤️ ${post.likes||0}</button>
-        <button class="post-action-btn">💬 Comentar</button>
-        <button class="post-action-btn">🔗 Compartilhar</button>
-      </div>
-    </div>`;
-  }).join('') : '<div style="text-align:center;padding:2rem;color:var(--gray3)">Seja o primeiro a postar!</div>';
-
-  // Members
-  const membersEl = document.getElementById('members-online');
-  if (membersEl) {
-    const members = [{n:'Carlos M.',r:'Atirador'},{n:'Ana T.',r:'CAC Registrada'},{n:'Ricardo S.',r:'Colecionador'},{n:'Paulo R.',r:'Iniciante'}];
-    membersEl.innerHTML = members.map(m=>{
-      const ini=m.n.split(' ').map(w=>w[0]).join('').toUpperCase();
-      return `<div class="member-row"><div class="member-avatar">${ini}</div><div class="member-info"><strong>${m.n}</strong><small>${m.r}</small></div><div class="online-dot"></div></div>`;
-    }).join('');
-  }
-}
-
-function getAgo(d){
-  const s=Math.floor((Date.now()-d)/1000);
-  if(s<60)return 'agora';if(s<3600)return `${Math.floor(s/60)}min`;
-  if(s<86400)return `${Math.floor(s/3600)}h`;return `${Math.floor(s/86400)}d`;
-}
-
-function updateStats() {
-  document.getElementById('stat-produtos').textContent = allProducts.length || '—';
-  document.getElementById('stat-membros').textContent = '247+';
-}
-
-// ══════════════════════════════════════════════
-//  NAV
-// ══════════════════════════════════════════════
-function goPage(page) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(`page-${page}`).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const map={home:0,loja:1,processo:2,noticias:3,comunidade:4};
-  const idx = map[page];
-  if(idx!==undefined) document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
-
-  if(page==='loja') renderLojaGrid();
-  if(page==='comunidade') {
-    if(currentUser){ document.getElementById('comm-locked').style.display='none'; document.getElementById('comm-content').style.display='block'; renderFeed(); }
-    else { document.getElementById('comm-locked').style.display='block'; document.getElementById('comm-content').style.display='none'; }
-  }
-  if(page==='admin') { if(!adminAuthed){ document.getElementById('admin-login-screen').style.display='flex'; document.getElementById('admin-panel').style.display='none'; } }
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// ══════════════════════════════════════════════
-//  FILTERS
-// ══════════════════════════════════════════════
-function filterLojaCategory(el, cat) {
-  lojaCategory=cat;
-  document.querySelectorAll('#page-loja .nav-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderLojaGrid();
-}
-function filterLojaSearch(v){renderLojaGrid();}
-
-// ══════════════════════════════════════════════
-//  PRODUCT MODAL
-// ══════════════════════════════════════════════
-function openProduct(id) {
-  const p = allProducts.find(x=>x.id==id); if(!p)return;
-  currentProd=p;
-  const imgW=document.getElementById('pm-img');
-  imgW.innerHTML=p.imagem_url?`<img src="${p.imagem_url}" alt="${p.nome}" onerror="this.parentElement.innerHTML='${p.emoji||'🔫'}'">`:(p.emoji||'🔫');
-  document.getElementById('pm-cat').textContent=p.categoria||'';
-  document.getElementById('pm-name').textContent=p.nome;
-  document.getElementById('pm-desc').textContent=p.descricao||'';
-  document.getElementById('pm-price').innerHTML=`<small>R$ </small>${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-  const wa=config.whatsapp||'5519998830126';
-  const msg=encodeURIComponent(`Olá! Gostaria de mais informações sobre: *${p.nome}*\nPreço: R$ ${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}`);
-  document.getElementById('pm-wa').href=`https://wa.me/${wa}?text=${msg}`;
-  document.getElementById('prod-modal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeProdModal(e){if(e.target===document.getElementById('prod-modal')){document.getElementById('prod-modal').classList.remove('open');document.body.style.overflow='';}}
-
-function openPixModal(){
-  if(!currentProd)return;
-  document.getElementById('pix-key-val').textContent=config.pix||'Configure a chave PIX no Admin';
-  document.getElementById('pix-price-val').textContent=`R$ ${Number(currentProd.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-  document.getElementById('pix-name-val').textContent=config.pix_name?`Recebedor: ${config.pix_name}`:'';
-  document.getElementById('pix-modal').classList.add('open');
-}
-function closePixModal(e){if(e.target===document.getElementById('pix-modal'))document.getElementById('pix-modal').classList.remove('open');}
-function copyPix(){
-  const k=config.pix;
-  if(!k){showToast('Chave PIX não configurada','err');return;}
-  navigator.clipboard.writeText(k).then(()=>showToast('Chave PIX copiada! ✓','ok')).catch(()=>showToast('Selecione e copie a chave',''));
-}
-
-// ══════════════════════════════════════════════
-//  AUTH
-// ══════════════════════════════════════════════
-function openAuth(tab='login'){
-  document.getElementById('auth-modal').classList.add('open');
-  document.body.style.overflow='hidden';
-  switchAuthTab(tab);
-}
-function closeAuth(){
-  document.getElementById('auth-modal').classList.remove('open');
-  document.body.style.overflow='';
-}
-function switchAuthTab(t){
-  document.getElementById('tab-login').classList.toggle('active',t==='login');
-  document.getElementById('tab-register').classList.toggle('active',t==='register');
-  document.getElementById('form-login').style.display=t==='login'?'block':'none';
-  document.getElementById('form-register').style.display=t==='register'?'block':'none';
-}
-
-async function doLogin() {
-  const email=document.getElementById('l-email').value.trim();
-  const pw=document.getElementById('l-password').value;
-  const errEl=document.getElementById('l-error');
-  if(!email||!pw){errEl.textContent='Preencha todos os campos.';errEl.style.display='block';return;}
-
-  if(supabase) {
-    const r = await supabase.signIn(email,pw);
-    if(r.error){errEl.textContent=r.error.message||'Credenciais inválidas.';errEl.style.display='block';return;}
-    const nome = r.user?.user_metadata?.nome || email.split('@')[0];
-    currentUser={id:r.user.id,email,nome,role:'user'};
-    if(email===config.admin_email) currentUser.role='admin';
-  } else {
-    // Demo login
-    currentUser={id:'demo-'+Date.now(),email,nome:email.split('@')[0],role:email.includes('admin')?'admin':'user'};
-  }
-  localStorage.setItem('gsc_user',JSON.stringify(currentUser));
-  onUserLogin();
-  closeAuth();
-  errEl.style.display='none';
-  showToast(`Bem-vindo, ${currentUser.nome}! 🎯`,'ok');
-}
-
-async function doRegister() {
-  const nome=document.getElementById('r-nome').value.trim();
-  const sob=document.getElementById('r-sobrenome').value.trim();
-  const email=document.getElementById('r-email').value.trim();
-  const pw=document.getElementById('r-password').value;
-  const conf=document.getElementById('r-confirm').value;
-  const cpf=document.getElementById('r-cpf').value.trim();
-  const errEl=document.getElementById('r-error');
-  const okEl=document.getElementById('r-success');
-
-  if(!nome||!sob||!email||!pw||!cpf){errEl.textContent='Preencha todos os campos obrigatórios.';errEl.style.display='block';return;}
-  if(pw!==conf){errEl.textContent='As senhas não coincidem.';errEl.style.display='block';return;}
-  if(pw.length<6){errEl.textContent='Senha mínima: 6 caracteres.';errEl.style.display='block';return;}
-  if(!validateCPF(cpf.replace(/\D/g,''))){errEl.textContent='CPF inválido.';errEl.style.display='block';return;}
-
-  const fullName=`${nome} ${sob}`;
-  if(supabase){
-    const r=await supabase.signUp(email,pw,{nome:fullName,cpf:cpf.replace(/\D/g,''),perfil:document.getElementById('r-perfil').value});
-    if(r.error){errEl.textContent=r.error.message||'Erro no cadastro.';errEl.style.display='block';return;}
-    okEl.textContent='Conta criada! Verifique seu e-mail para confirmar o cadastro.';okEl.style.display='block';
-    errEl.style.display='none';
-  } else {
-    currentUser={id:'demo-'+Date.now(),email,nome:fullName,role:'user'};
-    localStorage.setItem('gsc_user',JSON.stringify(currentUser));
-    onUserLogin();
-    closeAuth();
-    showToast(`Bem-vindo à GSC Community, ${nome}! 🔫`,'ok');
-  }
-}
-
-function doLogout(){
-  currentUser=null;localStorage.removeItem('gsc_user');
-  document.getElementById('user-area-guest').style.display='flex';
-  document.getElementById('user-area-logged').style.display='none';
-  document.getElementById('nav-admin').style.display='none';
-  closeUserMenu();
-  goPage('home');
-  showToast('Sessão encerrada','');
-}
-
-function onUserLogin(){
-  document.getElementById('user-area-guest').style.display='none';
-  document.getElementById('user-area-logged').style.display='block';
-  const initials=currentUser.nome.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('user-avatar-top').textContent=initials;
-  document.getElementById('user-name-top').textContent=currentUser.nome.split(' ')[0];
-  document.getElementById('user-avatar-menu').textContent=initials;
-  document.getElementById('user-fullname-menu').textContent=currentUser.nome;
-  document.getElementById('user-email-menu').textContent=currentUser.email;
-  document.getElementById('comm-avatar').textContent=initials;
-  if(currentUser.role==='admin'){
-    document.getElementById('nav-admin').style.display='block';
-    document.getElementById('menu-admin-link').style.display='block';
-  }
-  // comunidade unlock
-  document.getElementById('comm-locked').style.display='none';
-  document.getElementById('comm-content').style.display='block';
-  renderFeed();
-}
-
-function openUserMenu(){
-  const m=document.getElementById('user-menu');
-  m.style.display=m.style.display==='none'?'block':'none';
-}
-function closeUserMenu(){document.getElementById('user-menu').style.display='none';}
-document.addEventListener('click',e=>{
-  const m=document.getElementById('user-menu'),p=document.querySelector('.user-pill');
-  if(m&&!m.contains(e.target)&&p&&!p.contains(e.target))m.style.display='none';
-});
-
-// ══════════════════════════════════════════════
-//  COMMUNITY
-// ══════════════════════════════════════════════
-async function submitPost(){
-  if(!currentUser){openAuth('login');return;}
-  const txt=document.getElementById('post-input').value.trim();
-  const tag=document.getElementById('post-tag').value;
-  if(!txt){showToast('Digite algo para publicar','err');return;}
-  const post={user_name:currentUser.nome,conteudo:txt,tag,likes:0,created_at:new Date().toISOString()};
-  if(supabase) await supabase.insert('community_posts',{...post,user_id:currentUser.id});
-  communityPosts.unshift({...post,id:Date.now()});
-  document.getElementById('post-input').value='';
-  renderFeed();
-  showToast('Publicado! 🎯','ok');
-}
-
-function likePost(id){
-  const p=communityPosts.find(x=>x.id==id);
-  if(p){p.likes=(p.likes||0)+1;renderFeed();}
-}
-
-// ══════════════════════════════════════════════
-//  ADMIN
-// ══════════════════════════════════════════════
-function checkAdminPw(){
-  const pw=document.getElementById('adm-pw').value;
-  if(pw===config.admin_password||pw==='gsc2024'){
-    adminAuthed=true;
-    document.getElementById('admin-login-screen').style.display='none';
-    document.getElementById('admin-panel').style.display='block';
-    renderAdminLists();
-    document.getElementById('adm-err').style.display='none';
-  } else {document.getElementById('adm-err').textContent='Senha incorreta.';document.getElementById('adm-err').style.display='block';}
-}
-function adminLogout(){adminAuthed=false;document.getElementById('admin-login-screen').style.display='flex';document.getElementById('admin-panel').style.display='none';}
-
-async function saveSbConfig(){
-  const url=document.getElementById('sb-url').value.trim();
-  const key=document.getElementById('sb-key').value.trim();
-  if(!url||!key){showToast('Preencha URL e Key','err');return;}
-  supabase=buildSB(url,key);
-  setSBStatus(true,'Conectando...');
-  try{
-    const r=await fetch(`${url}/rest/v1/`,{headers:supabase.headers});
-    setSBStatus(r.ok||r.status===404,'Conectado ✓');
-    saveLocalConf({sb_url:url,sb_key:key});
-    showToast('Supabase conectado!','ok');
-    await loadData();
-    renderAdminLists();
-  }catch(e){setSBStatus(false,'Erro de conexão');showToast('Falha na conexão','err');}
-}
-function setSBStatus(ok,msg){
-  const el=document.getElementById('sb-status');
-  el.classList.toggle('on',ok);
-  document.getElementById('sb-txt').textContent=msg||(ok?'Conectado':'Não conectado');
-}
-function saveConfig(){
-  config.whatsapp=document.getElementById('cfg-wa').value.trim();
-  config.pix=document.getElementById('cfg-pix').value.trim();
-  config.pix_name=document.getElementById('cfg-pix-name').value.trim();
-  const npw=document.getElementById('cfg-adm-pw').value;
-  if(npw)config.admin_password=npw;
-  saveLocalConf();
-  if(supabase)supabase.upsert('store_config',[{id:1,whatsapp:config.whatsapp,pix:config.pix,pix_name:config.pix_name}]);
-  showToast('Configurações salvas!','ok');
-}
-function saveLocalConf(extra={}){
-  const prev=JSON.parse(localStorage.getItem('gsc_config')||'{}');
-  localStorage.setItem('gsc_config',JSON.stringify({...prev,...extra,whatsapp:config.whatsapp,pix:config.pix,pix_name:config.pix_name,admin_password:config.admin_password}));
-}
-
-async function saveProduct(){
-  const nome=document.getElementById('pf-nome').value.trim();
-  const cat=document.getElementById('pf-cat').value;
-  const desc=document.getElementById('pf-desc').value.trim();
-  const preco=parseFloat(document.getElementById('pf-preco').value);
-  const estoque=parseInt(document.getElementById('pf-estoque').value)||0;
-  const img=document.getElementById('pf-img').value.trim();
-  const emoji=document.getElementById('pf-emoji').value.trim();
-  const dest=document.getElementById('pf-destaque').checked;
-  const eid=document.getElementById('edit-prod-id').value;
-  
-  if(!nome||!cat||isNaN(preco)){
-    showToast('Preencha nome, categoria e preço','err');
-    return;
-  }
-  
-  // Monta o objeto exatamente com as colunas que estão na tabela
-  const p={
-    nome,
-    categoria: cat,
-    descricao: desc,
-    preco: preco,
-    estoque: estoque,
-    imagem_url: img,
-    emoji: emoji,
-    destaque: dest,
-    ativo: true
-  };
-  
-  if(supabase){
-    try {
-      let res;
-      if(eid) {
-        res = await supabase.update('products', p, 'id', eid);
-      } else {
-        res = await supabase.insert('products', [p]);
-      }
-      
-      // LOG DE TESTE: Abre o console do navegador (F12) para ver o que o Supabase respondeu
-      console.log("Resposta do Supabase:", res);
-      
-      // Recarrega os dados direto do banco para atualizar a tela
-      await loadData();
-      
-    } catch (error) {
-      console.error("Erro ao salvar no Supabase:", error);
-      showToast('Erro ao salvar no banco de dados','err');
-      return;
-    }
-  } else {
-    // Modo Demo/Local
-    if(eid){
-      const i=allProducts.findIndex(x=>x.id==eid);
-      if(i>=0) allProducts[i]={...allProducts[i],...p};
-    } else {
-      allProducts.push({...p,id: Date.now()});
-    }
-    renderAllData();
-  }
-  
-  showToast(eid?'Produto atualizado! ✓':'Produto cadastrado! ✓','ok');
-  cancelProdEdit();
-}
-
-function editProduct(id){
-  const p=allProducts.find(x=>x.id==id);if(!p)return;
-  document.getElementById('edit-prod-id').value=p.id;
-  document.getElementById('pf-nome').value=p.nome||'';
-  document.getElementById('pf-cat').value=p.categoria||'';
-  document.getElementById('pf-desc').value=p.descricao||'';
-  document.getElementById('pf-preco').value=p.preco||'';
-  document.getElementById('pf-estoque').value=p.estoque||'';
-  document.getElementById('pf-img').value=p.imagem_url||'';
-  document.getElementById('pf-emoji').value=p.emoji||'';
-  document.getElementById('pf-destaque').checked=!!p.destaque;
-  document.getElementById('prod-form-title').textContent='Editar Produto';
-  document.getElementById('prod-save-btn').textContent='💾 Salvar';
-  document.getElementById('prod-cancel-btn').style.display='block';
-}
-function cancelProdEdit(){
-  ['edit-prod-id','pf-nome','pf-desc','pf-preco','pf-estoque','pf-img','pf-emoji'].forEach(id=>{document.getElementById(id).value='';});
-  document.getElementById('pf-cat').value='';
-  document.getElementById('pf-destaque').checked=false;
-  document.getElementById('prod-form-title').textContent='Cadastrar Produto';
-  document.getElementById('prod-save-btn').textContent='✅ Cadastrar';
-  document.getElementById('prod-cancel-btn').style.display='none';
-}
-
-async function deleteProduct(id){
-  if(!confirm('Remover produto?'))return;
-  if(supabase)await supabase.del('products','id',id);
-  allProducts=allProducts.filter(p=>p.id!=id);
-  renderAllData();
-  showToast('Produto removido','');
-}
-
-async function saveNews(){
-  const titulo=document.getElementById('nf-titulo').value.trim();
-  const desc=document.getElementById('nf-desc').value.trim();
-  const cat=document.getElementById('nf-cat').value;
-  const emoji=document.getElementById('nf-emoji').value.trim();
-  const img=document.getElementById('nf-img').value.trim();
-  if(!titulo||!desc){showToast('Preencha título e descrição','err');return;}
-  const n={titulo,descricao:desc,categoria:cat,emoji,imagem_url:img,created_at:new Date().toISOString()};
-  if(supabase)await supabase.insert('news',[n]);
-  allNews.unshift({...n,id:Date.now()});
-  renderNews();renderAdminLists();
-  ['nf-titulo','nf-desc','nf-emoji','nf-img'].forEach(id=>document.getElementById(id).value='');
-  showToast('Notícia publicada!','ok');
-}
-
-async function deleteNews(id){
-  if(!confirm('Remover notícia?'))return;
-  if(supabase)await supabase.del('news','id',id);
-  allNews=allNews.filter(n=>n.id!=id);
-  renderNews();renderAdminLists();
-  showToast('Notícia removida','');
-}
-
-function renderAdminLists(){
-  // Products
-  const pl=document.getElementById('adm-prod-list');
-  const pc=document.getElementById('adm-prod-count');
-  if(pc)pc.textContent=`(${allProducts.length})`;
-  if(pl) pl.innerHTML=allProducts.length?allProducts.map(p=>`<div class="admin-row">
-    <div class="admin-row-thumb">${p.imagem_url?`<img src="${p.imagem_url}" onerror="this.parentElement.innerHTML='${p.emoji||'🔫'}'">`:p.emoji||'🔫'}</div>
-    <div class="admin-row-info"><strong>${p.nome}</strong><small>${p.categoria} · R$ ${Number(p.preco).toLocaleString('pt-BR',{minimumFractionDigits:2})} · Estoque: ${p.estoque}</small></div>
-    <div class="admin-row-actions">
-      <button class="btn-icon" onclick="editProduct(${p.id})">✏️</button>
-      <button class="btn-icon del" onclick="deleteProduct(${p.id})">🗑️</button>
-    </div>
-  </div>`).join(''):'<div style="text-align:center;padding:1.5rem;color:var(--gray3)">Nenhum produto</div>';
-  // News
-  const nl=document.getElementById('adm-news-list');
-  const nc=document.getElementById('adm-news-count');
-  if(nc)nc.textContent=`(${allNews.length})`;
-  if(nl) nl.innerHTML=allNews.length?allNews.map(n=>`<div class="admin-row">
-    <div class="admin-row-thumb">${n.emoji||'📰'}</div>
-    <div class="admin-row-info"><strong>${n.titulo}</strong><small>${n.categoria}</small></div>
-    <div class="admin-row-actions"><button class="btn-icon del" onclick="deleteNews(${n.id})">🗑️</button></div>
-  </div>`).join(''):'<div style="text-align:center;padding:1.5rem;color:var(--gray3)">Nenhuma notícia</div>';
-}
-
-// ══════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════
-function maskCPF(el){
-  let v=el.value.replace(/\D/g,'').slice(0,11);
-  if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
-  else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
-  else if(v.length>3)v=v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
-  el.value=v;
-}
-
-function validateCPF(cpf){
-  if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
-  let s=0;for(let i=0;i<9;i++)s+=parseInt(cpf[i])*(10-i);
-  let r=11-(s%11);if(r>=10)r=0;if(r!==parseInt(cpf[9]))return false;
-  s=0;for(let i=0;i<10;i++)s+=parseInt(cpf[i])*(11-i);
-  r=11-(s%11);if(r>=10)r=0;return r===parseInt(cpf[10]);
-}
-
-function showToast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.className=`toast show ${type}`;
-  setTimeout(()=>t.className='toast',3000);
-}
-</script>
-</body>
-</html>    <p style="font-size:12px;color:var(--gray2)">Clique na chave para copiar automaticamente</p>
-  </div>
-</div>
-
-<!-- ── TOAST ── -->
-<div class="toast" id="toast"></div>
-
-<!-- ── FOOTER ── -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <span class="logo">GSC</span>
-      <p>Guns Score Community — A plataforma do atirador esportivo brasileiro. Loja, comunidade e guias para atiradores legalizados.</p>
-      <p style="margin-top:0.75rem;font-size:12px;color:var(--gray2)">Piracicaba, SP — CNPJ: 00.000.000/0001-00</p>
-    </div>
-    <div class="footer-col">
-      <h4>Loja</h4>
-      <a onclick="goPage('loja')">Pistolas</a>
-      <a onclick="goPage('loja')">Revólveres</a>
-      <a onclick="goPage('loja')">Munições</a>
-      <a onclick="goPage('loja')">Acessórios</a>
-    </div>
-    <div class="footer-col">
-      <h4>Comunidade</h4>
-      <a onclick="goPage('processo')">Como Registrar</a>
-      <a onclick="goPage('noticias')">Notícias</a>
-      <a onclick="openAuth('register')">Criar Conta</a>
-    </div>
-    <div class="footer-col">
-      <h4>Contato</h4>
-      <a href="https://wa.me/5519998830126" target="_blank">WhatsApp</a>
-      <a href="https://instagram.com/gunscoreoficial" target="_blank">Instagram</a>
-      <a>Av. Dr. Paulo de Moraes, 2173<br>Piracicaba/SP</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2026 GSC — Guns Score Community. Todos os direitos reservados.</p>
-    <p>Venda exclusiva para maiores de 18 anos com registro legal</p>
-  </div>
-</footer>
-
-<script>
-// ══════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════
-let supabase = null;
-let allProducts = [], allNews = [], communityPosts = [];
-let currentUser = null;
-let currentProd = null;
-let config = { whatsapp:'5519998830126', pix:'', pix_name:'GSC Guns Score Community', admin_password:'gsc2024' };
-let lojaCategory = 'all';
-let adminAuthed = false;
-
-// ── STEPS DATA ──
-const STEPS = [
-  { n:1, title:'Verificar Pré-requisitos', text:'Ter 18+ anos, ser brasileiro ou residente permanente, ter emprego lícito e residência fixa. Certidão negativa de antecedentes criminais.', tag:'Requisitos', emoji:'✅' },
-  { n:2, title:'Escolher a Categoria', text:'CAC (Caçador, Atirador e Colecionador): escolha entre colecionador, atirador esportivo ou caçador. Cada categoria tem regras específicas.', tag:'CR / SIGMA', emoji:'🏷️' },
-  { n:3, title:'Fazer Curso de Reciclagem', text:'Realizar curso teórico e prático de reciclagem em clube de tiro credenciado pelo Exército. Mínimo de 8 horas. A GSC indica stands parceiros.', tag:'Obrigatório', emoji:'🎓' },
-  { n:4, title:'Registro no SIGMA', text:'Registrar-se no Sistema de Gerenciamento Militar de Armas (SIGMA) via site do Exército Brasileiro. Enviar documentação digitalizada.', tag:'Exército', emoji:'🖥️' },
-  { n:5, title:'Adquirir a Arma', text:'Com o Certificado de Registro (CR) em mãos, comprar a arma em loja autorizada como a GSC. A transferência é registrada automaticamente.', tag:'Loja Autorizada', emoji:'🔫' },
-  { n:6, title:'Manutenção Anual', text:'Renovar CR anualmente, manter registro de treinos no clube (mínimo de disparos/ano por calibre), e guardar a arma em cofre registrado.', tag:'Anual', emoji:'🔄' },
-];
-
-// ══════════════════════════════════════════════
-//  AGE GATE
-// ══════════════════════════════════════════════
-function confirmAge() {
-  sessionStorage.setItem('gsc_age', '1');
-  document.getElementById('age-gate').style.display='none';
-  init();
-}
-function denyAge() { document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0A0A0A;color:#666;font-family:sans-serif;text-align:center;padding:2rem"><div><p style="font-size:2rem;margin-bottom:1rem">⛔</p><p>Acesso negado. Este site é exclusivo para maiores de 18 anos.</p></div></div>'; }
-window.onload = () => { if(sessionStorage.getItem('gsc_age')) { document.getElementById('age-gate').style.display='none'; init(); } }
-
-// ══════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════
-function init() {
-  loadLocalConfig();
-  renderSteps();
-  loadDemoData();
-}
-
-function loadLocalConfig() {
-  const s = localStorage.getItem('gsc_config');
-  if (!s) return;
-  try {
-    const c = JSON.parse(s);
-    config = {...config,...c};
-    if (c.sb_url && c.sb_key) {
-      document.getElementById('sb-url').value = c.sb_url;
-      document.getElementById('sb-key').value = c.sb_key;
-      document.getElementById('cfg-wa').value = c.whatsapp||'';
-      document.getElementById('cfg-pix').value = c.pix||'';
-      document.getElementById('cfg-pix-name').value = c.pix_name||'';
-      supabase = buildSB(c.sb_url, c.sb_key);
-      setSBStatus(true,'Conectado ✓');
-      loadData();
-    } else { loadDemoData(); }
-    // Session user
-    const u = localStorage.getItem('gsc_user');
-    if (u) { currentUser = JSON.parse(u); onUserLogin(); }
-  } catch(e) { loadDemoData(); }
-}
-
-function buildSB(url, key) {
-  const h = { 
-    'apikey': key,
-    'Authorization': `Bearer ${key}`,
-    'Content-Type': 'application/json' 
-  };
-  
-  const q = (t, qstr) => fetch(`${url}/rest/v1/${t}${qstr||''}`, { headers: h });
-  
-  return {
-    url, key, headers: h,
-    q,
-    // Garante que se vier um erro ou não for array, trate corretamente
-    getAll: (t, extra='') => q(t, `?select=*${extra}`).then(async r => {
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        console.error(`Erro ao buscar em ${t}:`, err);
-        return [];
-      }
-      return r.json();
-    }),
-    
-    // Adicionado tratamento para não quebrar com r.json() se o retorno for vazio
-    insert: (t, d) => fetch(`${url}/rest/v1/${t}`, {
-      method: 'POST',
-      headers: { ...h, 'Prefer': 'return=representation' },
-      body: JSON.stringify(Array.isArray(d) ? d : [d])
-    }).then(r => r.ok ? r.json().catch(() => ({ })) : r.json()),
-    
-    // Adicionado Prefer return=representation no PATCH também
-    update: (t, d, col, val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`, {
-      method: 'PATCH',
-      headers: { ...h, 'Prefer': 'return=representation' },
-      body: JSON.stringify(d)
-    }).then(r => r.ok ? r.json().catch(() => ({ })) : r.json()),
-    
-    del: (t, col, val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`, {
-      method: 'DELETE',
-      headers: h
-    }).then(r => r.ok),
-    
-    upsert: (t, d) => fetch(`${url}/rest/v1/${t}`, {
-      method: 'POST',
-      headers: { ...h, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify(Array.isArray(d) ? d : [d])
-    }).then(r => r.ok ? r.json().catch(() => ({ })) : r.json()),
-    
+    getAll: (t,extra='') => q(t,`?select=*${extra}`).then(r=>r.json()),
+    insert: (t,d) => fetch(`${url}/rest/v1/${t}`,{method:'POST',headers:{...h,'Prefer':'return=representation'},body:JSON.stringify(Array.isArray(d)?d:[d])}).then(r=>r.json()),
+    update: (t,d,col,val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`,{method:'PATCH',headers:{...h,'Prefer':'return=representation'},body:JSON.stringify(d)}).then(r=>r.json()),
+    del: (t,col,val) => fetch(`${url}/rest/v1/${t}?${col}=eq.${val}`,{method:'DELETE',headers:h}).then(r=>r.ok),
+    upsert: (t,d) => fetch(`${url}/rest/v1/${t}`,{method:'POST',headers:{...h,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(Array.isArray(d)?d:[d])}).then(r=>r.json()),
     // Auth
-    signUp: (email, pw, meta) => fetch(`${url}/auth/v1/signup`, { 
-      method: 'POST', 
-      headers: h, 
-      body: JSON.stringify({ email, password: pw, data: meta }) 
-    }).then(r => r.json()),
-    
-    signIn: (email, pw) => fetch(`${url}/auth/v1/token?grant_type=password`, { 
-      method: 'POST', 
-      headers: h, 
-      body: JSON.stringify({ email, password: pw }) 
-    }).then(r => r.json()),
+    signUp: (email,pw,meta) => fetch(`${url}/auth/v1/signup`,{method:'POST',headers:h,body:JSON.stringify({email,password:pw,data:meta})}).then(r=>r.json()),
+    signIn: (email,pw) => fetch(`${url}/auth/v1/token?grant_type=password`,{method:'POST',headers:h,body:JSON.stringify({email,password:pw})}).then(r=>r.json()),
   };
 }
 
@@ -2116,7 +1292,17 @@ function goPage(page) {
     if(currentUser){ document.getElementById('comm-locked').style.display='none'; document.getElementById('comm-content').style.display='block'; renderFeed(); }
     else { document.getElementById('comm-locked').style.display='block'; document.getElementById('comm-content').style.display='none'; }
   }
-  if(page==='admin') { if(!adminAuthed){ document.getElementById('admin-login-screen').style.display='flex'; document.getElementById('admin-panel').style.display='none'; } }
+  if(page==='admin') {
+    if(!adminAuthed){ document.getElementById('admin-login-screen').style.display='flex'; document.getElementById('admin-panel').style.display='none'; }
+    // Garante que os campos do Admin estejam preenchidos com os valores salvos
+    const c = JSON.parse(localStorage.getItem('gsc_config')||'{}');
+    const setVal = (id, val) => { const el = document.getElementById(id); if(el && !el.value) el.value = val||''; };
+    setVal('sb-url', c.sb_url);
+    setVal('sb-key', c.sb_key);
+    setVal('cfg-wa', c.whatsapp || config.whatsapp);
+    setVal('cfg-pix', c.pix || config.pix);
+    setVal('cfg-pix-name', c.pix_name || config.pix_name);
+  }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -2361,8 +1547,17 @@ async function saveProduct(){
   if(!nome||!cat||isNaN(preco)){showToast('Preencha nome, categoria e preço','err');return;}
   const p={nome,categoria:cat,descricao:desc,preco,estoque,imagem_url:img,emoji,destaque:dest,ativo:true};
   if(supabase){
-    if(eid)await supabase.update('products',p,'id',eid);
-    else await supabase.insert('products',[p]);
+    const result = eid
+      ? await supabase.update('products',p,'id',eid)
+      : await supabase.insert('products',[p]);
+
+    // Supabase retorna array em sucesso; objeto com 'message' ou 'error' em falha
+    const hasError = result && !Array.isArray(result) && (result.error || result.message || result.code);
+    if(hasError){
+      showToast(result.message || result.error?.message || 'Erro ao salvar produto','err');
+      return;
+    }
+
     await loadData();
   } else {
     if(eid){const i=allProducts.findIndex(x=>x.id==eid);if(i>=0)allProducts[i]={...allProducts[i],...p};}
